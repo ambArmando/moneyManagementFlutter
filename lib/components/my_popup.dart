@@ -71,8 +71,6 @@ class MyPopupState extends State<MyPopup>{
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextField(
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    maxLength: 4,
                     keyboardType: TextInputType.number,
                     controller: _spendedValueController,
                     decoration: const InputDecoration(hintText: "Value"),

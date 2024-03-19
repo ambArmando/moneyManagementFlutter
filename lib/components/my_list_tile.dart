@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:money_management/enums/category_enum.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:money_management/enums/category_enum.dart';
 
 class MyListTile extends StatelessWidget {
   final CategoryEnum category;
@@ -43,7 +43,11 @@ class MyListTile extends StatelessWidget {
           title: Text(category.name),
           leading: Image.asset("assets/${category.name}.png", width: 26.0, height: 26.0,),
           subtitle: Text(note.toString()),
-          trailing: Text(spendedValue.toString()),
+          trailing: Text("-$spendedValue", style: const TextStyle(
+            color: Colors.red,
+            fontSize: 14,
+            fontWeight: FontWeight.w500
+          ),),
           
         ),
       );

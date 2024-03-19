@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../enums/category_enum.dart';
@@ -34,7 +35,8 @@ class ExpenseDatabase extends ChangeNotifier {
   }
 
   Future<List<Expense>> getCurrentDayExpenses() async {
-    return await isar.expenses.filter().dateEqualTo(DateTime.now()).findAll();
+    var allList = await isar.expenses.where().findAll();
+    return allList.where((_) => _.date.day == DateTime.now().day && _.date.month == DateTime.now().month && _.date.year == DateTime.now().year).toList();
   }
 
   void deleteExpense(int id) async {

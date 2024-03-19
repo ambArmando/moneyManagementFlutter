@@ -132,7 +132,39 @@ class HomePageState extends State<HomePage> {
                 );
               },
             ),
-          )
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(onPressed: null, child: Text("1")),
+              ElevatedButton(onPressed: null, child: Text("2")),
+              ElevatedButton(onPressed: null, child: Text("3"))
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(onPressed: null, child: Text("4")),
+              ElevatedButton(onPressed: null, child: Text("5")),
+              ElevatedButton(onPressed: null, child: Text("6"))
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(onPressed: null, child: Text("7")),
+              ElevatedButton(onPressed: null, child: Text("8")),
+              ElevatedButton(onPressed: null, child: Text("9"))
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(onPressed: null, child: Text(".")),
+              ElevatedButton(onPressed: () => {}, child: Icon(Icons.add)),
+              ElevatedButton(onPressed: null, child: Icon(Icons.backspace_outlined)),
+            ],
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -148,7 +180,7 @@ class HomePageState extends State<HomePage> {
             context: context,
              builder: (context) => popup
           ).then((value) {
-            if (popup.getExpense != null) {
+            if (popup.getExpense != null && popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) {
               setState(() {
                 fetchedExpenses.add(popup.getExpense!);
                 totalDaySpendings = popup.getTotalDaySpendings;
@@ -159,137 +191,25 @@ class HomePageState extends State<HomePage> {
           });
         },
         elevation: 0,
-        child: const Icon(Icons.add),
-      ),   
+        child: const Icon(Icons.more),
+      ), 
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.timeline), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart_sharp), label: "Statistics"),
+          BottomNavigationBarItem(icon: Icon(Icons.wallet), label: "Buget"),
+        ],
+      ),  
     );
   }
-
-  // AlertDialog MyPopUp() {
-  //   return AlertDialog(
-  //           title: const Text("New expense"),
-  //           content: StatefulBuilder(
-  //             builder: (BuildContext context, StateSetter setState) { 
-  //               return Column(
-  //               mainAxisSize: MainAxisSize.min,
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               children: [
-  //                 TextField(
-  //                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-  //                   maxLength: 4,
-  //                   keyboardType: TextInputType.number,
-  //                   controller: spendedValueController,
-  //                   decoration: const InputDecoration(hintText: "Value"),
-  //                 ),
-  //                 const SizedBox(height: 15),
-  //                 DropdownButton<CategoryEnum>(
-  //                   hint: const Text("Select category"),
-  //                   isExpanded: true,
-  //                   value: selectedCategory,
-  //                   items:  localDb.defaultCategorys.map((category) {
-  //                     return DropdownMenuItem(
-  //                       value: category.name,
-  //                       child: Text(category.name.toString().split(".").last));
-  //                   }).toList(),
-  //                   onChanged: (CategoryEnum? newSelectedCategory) {
-  //                     setState(() {
-  //                     selectedCategory = newSelectedCategory!;
-  //                   });
-  //                   },
-  //                 ),
-  //                 TextField(
-  //                   maxLength: 40,
-  //                   controller: noteController,
-  //                   decoration: const InputDecoration(hintText: "Note"),
-  //                 ),
-  //                 const SizedBox(height: 15),
-  //                 SizedBox(
-  //                   height: 20,
-  //                   child: Row(
-  //                     children: [                       
-  //                       ElevatedButton(onPressed: () async {
-  //                         final DateTime? pickedDate = await showDatePicker(
-  //                         context: context,
-  //                         initialDate: DateTime.now(),
-  //                         firstDate: DateTime(2000),
-  //                         lastDate: DateTime(2101),
-  //                         );
-  //                         if (pickedDate != null) {
-  //                           setState(() {
-  //                             selectedDate = pickedDate;
-  //                           });
-  //                         }
-  //                       }, child: const Text("Pick a date")),
-  //                       Expanded(
-  //                         child: Container(
-  //                           margin: const EdgeInsets.only(left: 15),
-  //                           child: Text(selectedDate == null ? DateFormat('dd MMMM yyyy').format(DateTime.now()) : DateFormat('dd MMMM yyyy').format(selectedDate!))),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 )
-  //               ],
-  //               );
-  //             },
-  //           ),
-  //           actions: [
-  //             _saveButton(),
-  //             _cancelButton(),
-  //           ],
-  //         );
-  // }
-
-  // Widget _cancelButton() {
-  //   return MaterialButton(
-  //     onPressed: (){
-  //       Navigator.pop(context);
-  //       spendedValueController.clear();
-  //       noteController.clear();
-  //       selectedCategory = null;
-  //       selectedDate = DateTime.now();
-  //     },
-  //     child: const Text("Cancel"),
-  //   );
-  // }
-
-  // Widget _saveButton() {
-  //   return MaterialButton(
-  //     onPressed: () async {
-  //       if (spendedValueController.text.isNotEmpty && selectedCategory != null)
-  //       {
-  //         //create new expense
-  //         Expense newExpense = Expense(
-  //           spendedValue: double.parse(spendedValueController.text),
-  //           category: selectedCategory!, 
-  //           date: selectedDate!, 
-  //           note: noteController.text,
-  //         );
-  //         //update the UI
-  //         var newTotalDaySpendings = (double.parse(totalDaySpendings!) + newExpense.spendedValue).toString();
-  //         setState(() {
-  //           fetchedExpenses.add(newExpense);
-  //           totalDaySpendings = newTotalDaySpendings;
-  //         });
-  //         _scrollController.animateTo(
-  //             _scrollController.position.maxScrollExtent,
-  //             curve: Curves.easeOut,
-  //             duration: const Duration(milliseconds: 500),
-  //         );
-  //         //save to db
-  //         Navigator.pop(context);
-  //         await localDb.createNewExpense(newExpense);
-  //       }
-  //     },
-  //     child: const Text("Save"),
-  //   );
-  // }
 
   DeleteExpense(int index) {
     var deletedExpenseId = fetchedExpenses[index].id;
     localDb.deleteExpense(deletedExpenseId);
-    var newTotalDaySpendings = (double.parse(totalDaySpendings!) - fetchedExpenses[index].spendedValue).toString();
+    //var newTotalDaySpendings = (double.parse(totalDaySpendings!) - fetchedExpenses[index].spendedValue).toString();
     setState(() {
       fetchedExpenses.removeAt(index);
-      totalDaySpendings = newTotalDaySpendings;
+      totalDaySpendings = CurrentDaySpendings();
     });
   }
 
@@ -297,8 +217,10 @@ class HomePageState extends State<HomePage> {
     var popup = MyPopup(title: "Edit expense", spendedValueController: spendedValueController, noteController: noteController, localDb: localDb, totalDaySpendings: totalDaySpendings!, expense: fetchedExpenses[index],);
     showDialog (context: context, builder: (context) => popup)
     .then((value) {
+      (popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) ? fetchedExpenses[index] = popup.getExpense! : fetchedExpenses.removeAt(index);
+      var updatedList = fetchedExpenses;
       setState(() {
-        fetchedExpenses[index] = popup.getExpense!;
+        fetchedExpenses = updatedList;
         totalDaySpendings = CurrentDaySpendings();
       });
     spendedValueController.clear();
@@ -310,7 +232,7 @@ class HomePageState extends State<HomePage> {
     if (fetchedExpenses.isNotEmpty) {
       return totalDaySpendings = fetchedExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString();
     }
-    return totalDaySpendings!;
+    return '0';
   }
 
   @override
