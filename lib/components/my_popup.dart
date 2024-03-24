@@ -1,6 +1,6 @@
+import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:money_management/database/expense_database.dart';
 
@@ -10,23 +10,16 @@ import '../models/expense.dart';
 class MyPopup extends StatefulWidget {
   String title;
   ExpenseDatabase localDb;
-  TextEditingController spendedValueController;
-  TextEditingController noteController;
-  String totalDaySpendings;
   Expense? expense;
   
   MyPopup({
     super.key,
     required this.title,
     required this.localDb,
-    required this.spendedValueController,
-    required this.noteController,
-    required this.totalDaySpendings,
     this.expense,
   });
 
   Expense? get getExpense => expense;
-  String? get getTotalDaySpendings => totalDaySpendings;
   
   @override
   State<MyPopup> createState() => MyPopupState();
@@ -34,9 +27,8 @@ class MyPopup extends StatefulWidget {
 
 class MyPopupState extends State<MyPopup>{
   late String _title;
-  late String _totalDaySpendings;
-  late TextEditingController _spendedValueController;
-  late TextEditingController _noteController;
+  final TextEditingController _spendedValueController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
   late ExpenseDatabase _localDb;
   DateTime? selectedDate = DateTime.now();
   CategoryEnum? selectedCategory;
@@ -46,10 +38,7 @@ class MyPopupState extends State<MyPopup>{
   void initState() {
     super.initState();
     _title = widget.title;
-    _spendedValueController = widget.spendedValueController;
-    _noteController = widget.noteController;
     _localDb = widget.localDb;
-    _totalDaySpendings = widget.totalDaySpendings;
     _expense = widget.expense;
 
     if (widget.expense != null) {
@@ -71,6 +60,7 @@ class MyPopupState extends State<MyPopup>{
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextField(
+                    maxLength: 5,
                     keyboardType: TextInputType.number,
                     controller: _spendedValueController,
                     decoration: const InputDecoration(hintText: "Value"),
@@ -110,7 +100,7 @@ class MyPopupState extends State<MyPopup>{
                           );
                           if (pickedDate != null) {
                             setState(() {
-                              selectedDate = pickedDate;
+                              selectedDate = DateTime(pickedDate.year, pickedDate.month, pickedDate.day);
                             });
                           }
                         }, child: const Text("Pick a date")),
@@ -151,35 +141,25 @@ class MyPopupState extends State<MyPopup>{
       onPressed: () async {
         if (widget.expense == null && _spendedValueController.text.isNotEmpty && selectedCategory != null)
         {
-          //create new expense
           Expense newExpense = Expense(
             spendedValue: double.parse(_spendedValueController.text),
             category: selectedCategory!, 
             date: selectedDate!, 
             note: _noteController.text,
           );
-
           widget.expense = newExpense;
-          widget.totalDaySpendings = (double.parse(_totalDaySpendings) + newExpense.spendedValue).toString();
-          // _scrollController.animateTo(
-          //     _scrollController.position.maxScrollExtent,
-          //     curve: Curves.easeOut,
-          //     duration: const Duration(milliseconds: 500),
-          // );
-          //save to db
           Navigator.pop(context);
-          await _localDb.createNewExpense(newExpense);
+          _localDb.createNewExpense(newExpense);
         } else if (widget.expense != null) {
           widget.expense!.spendedValue = double.parse(_spendedValueController.text);
           widget.expense!.category = selectedCategory!;
           widget.expense!.note = _noteController.text;
           widget.expense!.date = selectedDate!;
           Navigator.pop(context);
-          await _localDb.updateExpense(widget.expense!);
+          _localDb.updateExpense(widget.expense!);
         }
       },
       child: const Text("Save"),
     );
   }
-  
 }

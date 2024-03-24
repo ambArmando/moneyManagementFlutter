@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:money_management/database/expense_database.dart';
+import 'package:money_management/pages/home.dart';
 import 'pages/home_page.dart';
 
 void main() async {
@@ -13,9 +14,9 @@ class MyApp extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      home: Home(),
     );
   }
 }

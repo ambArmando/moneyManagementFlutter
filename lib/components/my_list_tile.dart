@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:intl/intl.dart';
 import 'package:money_management/enums/category_enum.dart';
+import 'package:money_management/models/expense.dart';
 
 class MyListTile extends StatelessWidget {
-  final CategoryEnum category;
-  final String? note;
-  final double spendedValue;
+  final Expense expense;
   final Function(BuildContext)? onEditPressed;
   final Function(BuildContext)? onDeletePressed;
 
   const MyListTile ({
       super.key,
-      required this.category,
-      required this.note,
-      required this.spendedValue,
+      required this.expense,
       required this.onEditPressed,
       required this.onDeletePressed,
     }
@@ -40,15 +38,25 @@ class MyListTile extends StatelessWidget {
           ],
         ),
         child: ListTile(
-          title: Text(category.name),
-          leading: Image.asset("assets/${category.name}.png", width: 26.0, height: 26.0,),
-          subtitle: Text(note.toString()),
-          trailing: Text("-$spendedValue", style: const TextStyle(
-            color: Colors.red,
-            fontSize: 14,
-            fontWeight: FontWeight.w500
-          ),),
-          
+          title: Text(expense.category.name),
+          leading: Image.asset("assets/${expense.category.name}.png", width: 26.0, height: 26.0,),
+          subtitle: Text(expense.note.toString()),
+          trailing: SizedBox(
+            width: 130,
+            child: Row(
+              children: [
+                Expanded(child: Text(DateFormat('dd.MM').format(expense.date), style: const TextStyle(
+                  fontSize: 12,
+                ),)),
+                Text("-${expense.spendedValue}", style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500
+                ),
+                ),  
+              ],
+            ),
+          ) 
         ),
       );
   }
