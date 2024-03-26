@@ -12,7 +12,6 @@ import 'package:money_management/models/expense.dart';
 class Statistics extends StatefulWidget {
   const Statistics({super.key});
   
-  
   @override
   State<StatefulWidget> createState() => StatisticsState();
 }
@@ -26,6 +25,8 @@ class StatisticsState extends State<Statistics> {
   DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime endDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   String totalSpendingsBetweenDates = "0";
+  List<Expense> _currentDatesExpensesCopy = [];
+  int touchedIndex = -1;
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class StatisticsState extends State<Statistics> {
 
   Future<void> InitChart() async {
     _currentDatesExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
+    _currentDatesExpensesCopy = List.from(_currentDatesExpenses);
     totalSpendingsBetweenDates = CurrentDaySpendings();
     BuildExpensesMap();
     PopulateChart();
@@ -62,18 +64,20 @@ class StatisticsState extends State<Statistics> {
 
   void PopulateChart() {
     _pieData.clear();
+    var expensesMapKeys = _expensesMap.keys.toList();
     _expensesMap.forEach((key, value) {
       _pieData.add(PieChartSectionData(
         value: value,
         showTitle: true,
-        title: key.name + value.toString(),
+        title: value.toString(),
+        radius: expensesMapKeys.indexOf(key) == touchedIndex ? 60 : 50,
+        titleStyle: TextStyle(
+          fontSize: expensesMapKeys.indexOf(key) == touchedIndex ? 25 : 15,
+          fontWeight: expensesMapKeys.indexOf(key) == touchedIndex ? FontWeight.bold : FontWeight.normal,
+        ),
         color: GetCategoryColor(key),
       ));
     });
-  }
-
-  String FormatTitle(double value, CategoryEnum key){
-    return "${key.name} $value RON";
   }
 
   Color GetCategoryColor(CategoryEnum category) {
@@ -87,7 +91,7 @@ class StatisticsState extends State<Statistics> {
       case CategoryEnum.fun:
         return const Color.fromARGB(255, 250, 228, 34);
       case CategoryEnum.payments:
-        return Colors.purple[300]!;
+        return Colors.pink[700]!;
       case CategoryEnum.house:
         return Colors.deepOrange[400]!;
       case CategoryEnum.drinks:
@@ -128,7 +132,7 @@ class StatisticsState extends State<Statistics> {
                         child: ElevatedButton(onPressed: () {
                           showDialog(
                             context: context,
-                            builder: (BuildContext context) => AlertDialog(title: Text("Change date's"), 
+                            builder: (BuildContext context) => AlertDialog(title: const Text("Change date's"), 
                             content: StatefulBuilder(builder: (context, setState) {
                               return Column(
                                     mainAxisSize: MainAxisSize.min,
@@ -189,31 +193,60 @@ class StatisticsState extends State<Statistics> {
                   ),
                   Expanded(
                     flex: 2,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        PieChart(
-                          swapAnimationDuration: const Duration(milliseconds: 1000),
-                          swapAnimationCurve: Curves.easeInOutQuint,
-                          PieChartData(
-                            sectionsSpace: 2.5,
-                            centerSpaceRadius: 80,
-                            sections: _pieData,
-                          )
-                        ),
-                        Text(totalSpendingsBetweenDates, style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),)
-                      ],
+                    child: Container(
+                      color: Colors.grey[100],
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          PieChart(
+                            swapAnimationDuration: const Duration(milliseconds: 1000),
+                            swapAnimationCurve: Curves.easeInOutQuint,
+                            PieChartData(
+                              sectionsSpace: 2.5,
+                              centerSpaceRadius: 60,
+                              sections: _pieData,
+                              pieTouchData: PieTouchData(
+                                touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                                  setState(() {
+                                    if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
+                                      touchedIndex = -1;
+                                      return;
+                                    }
+                                    else {
+                                      touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                                      BuildExpensesMap();
+                                      PopulateChart();
+                                      FilterExpensesOnPieChartTouch(touchedIndex);
+                                    }
+                                  });
+                                }, 
+                              )
+                            )
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text("Total:"),
+                              Text("$totalSpendingsBetweenDates RON", style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),),
+                          ],),
+                          Positioned(
+                            bottom: 0,
+                            left: 5,
+                            child: _pieLegend(),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   Expanded(
                     flex: 3,
                     child: ListView.builder(
-                      itemCount: _currentDatesExpenses.length,
+                      itemCount: _currentDatesExpensesCopy.length,
                       itemBuilder: (context, int index) {
-                        Expense individualExpense = _currentDatesExpenses[index];
+                        Expense individualExpense = _currentDatesExpensesCopy[index];
                         return MyListTile(
                           expense: individualExpense, 
                           onEditPressed: (context) => {EditExpense(index)}, 
@@ -228,15 +261,29 @@ class StatisticsState extends State<Statistics> {
   }
 
   DeleteExpense(int index) {
-    if (_currentDatesExpenses.contains(_currentDatesExpenses[index])) {
-      localDb.deleteExpense(_currentDatesExpenses[index].id);
+    if (_currentDatesExpensesCopy.contains(_currentDatesExpensesCopy[index])) {
+      localDb.deleteExpense(_currentDatesExpensesCopy[index].id);
     }
-    //SetStateAfterDeleteExpense(index);
-    _currentDatesExpenses.removeAt(index);
-    BuildExpensesMap();
-    PopulateChart();
-    totalSpendingsBetweenDates = CurrentDaySpendings();
-    setState(() {});
+    var _expensesMapkeys = _expensesMap.keys.toList();
+    var deletedExpenseCategory = _currentDatesExpensesCopy[index].category;
+    _currentDatesExpenses.remove(_currentDatesExpensesCopy[index]);
+    _currentDatesExpensesCopy.removeAt(index);
+    setState(() {
+      touchedIndex = _expensesMapkeys.indexOf(deletedExpenseCategory);
+      BuildExpensesMap();
+      PopulateChart();
+      FilterExpensesOnPieChartTouch(_expensesMapkeys.indexOf(deletedExpenseCategory));
+      totalSpendingsBetweenDates = CurrentDaySpendings();
+    });
+  }
+
+  void FilterExpensesOnPieChartTouch(int touchedIndex) {
+    var keysIndex = _expensesMap.keys.toList();
+    if (touchedIndex < 0) {
+      _currentDatesExpensesCopy = List.from(_currentDatesExpenses);
+      return;
+    }
+    _currentDatesExpensesCopy = _currentDatesExpenses.where((element) => keysIndex.elementAt(touchedIndex) == element.category).toList();
   }
 
   void SetStateAfterDeleteExpense(int index) {
@@ -252,14 +299,15 @@ class StatisticsState extends State<Statistics> {
   }
 
   EditExpense(int index) {
-    var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: _currentDatesExpenses[index]);
+    var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: _currentDatesExpensesCopy[index]);
     showDialog (context: context, builder: (context) => popup)
     .then((value) {
-      popup.getExpense!.date.isBefore(startDate) || popup.getExpense!.date.isAfter(endDate) ? _currentDatesExpenses.removeAt(index) : _currentDatesExpenses[index] = popup.getExpense!;
-      BuildExpensesMap();
-      PopulateChart();
-      totalSpendingsBetweenDates = CurrentDaySpendings();
-      setState(() {}); 
+      popup.getExpense!.date.isBefore(startDate) || popup.getExpense!.date.isAfter(endDate) ? {_currentDatesExpensesCopy.removeAt(index), _currentDatesExpenses.remove(_currentDatesExpensesCopy[index])} : {_currentDatesExpensesCopy[index] = popup.getExpense!, _currentDatesExpenses[index] = _currentDatesExpensesCopy[index]};
+      setState(() {
+        BuildExpensesMap();
+        PopulateChart();
+        totalSpendingsBetweenDates = CurrentDaySpendings();
+      }); 
     });
   }
 
@@ -271,13 +319,14 @@ class StatisticsState extends State<Statistics> {
         },
         child: const Text("Cancel"),
       );
-    }
+  }
 
   Widget _saveButton() {
     return MaterialButton(
         onPressed: () async {
           Navigator.pop(context);
           _currentDatesExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
+          _currentDatesExpensesCopy = List.from(_currentDatesExpenses);
           setState(() {
             BuildExpensesMap();
             PopulateChart();
@@ -286,5 +335,25 @@ class StatisticsState extends State<Statistics> {
         },
         child: const Text("Save"),
       );
+  }
+
+  Widget _pieLegend() {
+    List<Widget> legend = [];
+    for(var key in _expensesMap.keys) {
+      legend.add(Row(
+        children: [
+          Container(width: 20, height: 20, color: GetCategoryColor(key),),
+          Container(
+            margin: const EdgeInsets.only(left: 5, bottom: 5),
+            child: Text(key.name)),
+        ],
+      ));
     }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: legend
+    );
+  }
+
 }

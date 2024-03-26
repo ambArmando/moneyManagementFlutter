@@ -21,7 +21,7 @@ class MyListTile extends StatelessWidget {
   Widget build(BuildContext context) {
       return Slidable(
         endActionPane: ActionPane(
-          motion: StretchMotion(),
+          motion: const StretchMotion(),
           children: [
             SlidableAction(
               onPressed: onEditPressed,
@@ -37,26 +37,35 @@ class MyListTile extends StatelessWidget {
             ),
           ],
         ),
-        child: ListTile(
-          title: Text(expense.category.name),
-          leading: Image.asset("assets/${expense.category.name}.png", width: 26.0, height: 26.0,),
-          subtitle: Text(expense.note.toString()),
-          trailing: SizedBox(
-            width: 130,
-            child: Row(
-              children: [
-                Expanded(child: Text(DateFormat('dd.MM').format(expense.date), style: const TextStyle(
-                  fontSize: 12,
-                ),)),
-                Text("-${expense.spendedValue}", style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500
+        child: Column(
+          children: [
+            ListTile(
+              title: Text(expense.category.name),
+              leading: Image.asset("assets/${expense.category.name}.png", width: 26.0, height: 26.0,),
+              subtitle: Text(expense.note.toString()),
+              trailing: SizedBox(
+                width: 130,
+                child: Row(
+                  children: [
+                    Expanded(child: Text(DateFormat('dd.MM').format(expense.date), style: const TextStyle(
+                      fontSize: 12,
+                    ),)),
+                    Text("-${expense.spendedValue}", style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500
+                    ),
+                    ),  
+                  ],
                 ),
-                ),  
-              ],
+              ),
             ),
-          ) 
+            const Divider(
+              height: 1,
+              thickness: 0.5, 
+              color: Color.fromARGB(255, 192, 192, 192),
+            )
+          ],
         ),
       );
   }

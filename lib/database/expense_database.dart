@@ -52,7 +52,10 @@ class ExpenseDatabase extends ChangeNotifier {
   }
 
   Future<List<Expense>> getExpensesBetweenDates(DateTime startDate, DateTime endDate) async {
-    var month = await isar.expenses.filter().dateBetween(startDate, endDate.add(const Duration(days: 1))).findAll();
+    var month = await isar.expenses.filter()
+    .dateBetween(startDate, endDate.add(const Duration(days: 1)))
+    .sortByDateDesc()
+    .findAll();
     return month;
   }
   
