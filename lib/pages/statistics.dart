@@ -26,7 +26,7 @@ class StatisticsState extends State<Statistics> {
   DateTime endDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   String totalSpendingsBetweenDates = "0";
   List<Expense> _currentDatesExpensesCopy = [];
-  int touchedIndex = -1;
+  int? touchedIndex = -1;
 
   @override
   void initState() {
@@ -198,6 +198,7 @@ class StatisticsState extends State<Statistics> {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
+                          _pieData.isEmpty ? const Text("No data available...") :
                           PieChart(
                             swapAnimationDuration: const Duration(milliseconds: 1000),
                             swapAnimationCurve: Curves.easeInOutQuint,
@@ -208,12 +209,12 @@ class StatisticsState extends State<Statistics> {
                               pieTouchData: PieTouchData(
                                 touchCallback: (FlTouchEvent event, pieTouchResponse) {
                                   setState(() {
-                                    if (!event.isInterestedForInteractions || pieTouchResponse == null || pieTouchResponse.touchedSection == null) {
-                                      touchedIndex = -1;
+                                    if (!event.isInterestedForInteractions || pieTouchResponse?.touchedSection == null) {
+                                      touchedIndex = pieTouchResponse?.touchedSection?.touchedSectionIndex;
                                       return;
                                     }
                                     else {
-                                      touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                                      touchedIndex = pieTouchResponse?.touchedSection!.touchedSectionIndex;
                                       BuildExpensesMap();
                                       PopulateChart();
                                       FilterExpensesOnPieChartTouch(touchedIndex);
@@ -226,12 +227,20 @@ class StatisticsState extends State<Statistics> {
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text("Total:"),
-                              Text("$totalSpendingsBetweenDates RON", style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),),
-                          ],),
+                              _pieData.isNotEmpty ? Column(
+                                children: [
+                                  const Text("Total:"),
+                                  Text("$totalSpendingsBetweenDates RON", style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ) 
+                              :
+                              Container(),
+                            ]
+                          ),
                           Positioned(
                             bottom: 0,
                             left: 5,
@@ -263,26 +272,24 @@ class StatisticsState extends State<Statistics> {
   DeleteExpense(int index) {
     if (_currentDatesExpensesCopy.contains(_currentDatesExpensesCopy[index])) {
       localDb.deleteExpense(_currentDatesExpensesCopy[index].id);
-    }
-    var _expensesMapkeys = _expensesMap.keys.toList();
-    var deletedExpenseCategory = _currentDatesExpensesCopy[index].category;
+    } 
     _currentDatesExpenses.remove(_currentDatesExpensesCopy[index]);
     _currentDatesExpensesCopy.removeAt(index);
     setState(() {
-      touchedIndex = _expensesMapkeys.indexOf(deletedExpenseCategory);
       BuildExpensesMap();
       PopulateChart();
-      FilterExpensesOnPieChartTouch(_expensesMapkeys.indexOf(deletedExpenseCategory));
+      FilterExpensesOnPieChartTouch(touchedIndex);
       totalSpendingsBetweenDates = CurrentDaySpendings();
     });
   }
 
-  void FilterExpensesOnPieChartTouch(int touchedIndex) {
-    var keysIndex = _expensesMap.keys.toList();
+  void FilterExpensesOnPieChartTouch(int? touchedIndex) {
+    if (touchedIndex == null) return;
     if (touchedIndex < 0) {
       _currentDatesExpensesCopy = List.from(_currentDatesExpenses);
       return;
     }
+    var keysIndex = _expensesMap.keys.toList();
     _currentDatesExpensesCopy = _currentDatesExpenses.where((element) => keysIndex.elementAt(touchedIndex) == element.category).toList();
   }
 
@@ -302,10 +309,14 @@ class StatisticsState extends State<Statistics> {
     var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: _currentDatesExpensesCopy[index]);
     showDialog (context: context, builder: (context) => popup)
     .then((value) {
-      popup.getExpense!.date.isBefore(startDate) || popup.getExpense!.date.isAfter(endDate) ? {_currentDatesExpensesCopy.removeAt(index), _currentDatesExpenses.remove(_currentDatesExpensesCopy[index])} : {_currentDatesExpensesCopy[index] = popup.getExpense!, _currentDatesExpenses[index] = _currentDatesExpensesCopy[index]};
+      if (popup.getExpense!.date.isBefore(startDate) || popup.getExpense!.date.isAfter(endDate)) {
+        _currentDatesExpensesCopy.removeAt(index);
+        _currentDatesExpenses.remove(_currentDatesExpensesCopy[index]);
+      }
       setState(() {
         BuildExpensesMap();
         PopulateChart();
+        FilterExpensesOnPieChartTouch(touchedIndex);
         totalSpendingsBetweenDates = CurrentDaySpendings();
       }); 
     });

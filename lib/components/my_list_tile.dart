@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
-import 'package:money_management/enums/category_enum.dart';
 import 'package:money_management/models/expense.dart';
 
 class MyListTile extends StatelessWidget {
@@ -25,7 +24,7 @@ class MyListTile extends StatelessWidget {
           children: [
             SlidableAction(
               onPressed: onEditPressed,
-              backgroundColor: Color.fromARGB(255, 56, 140, 209),
+              backgroundColor: const Color.fromARGB(255, 56, 140, 209),
               icon: Icons.edit,
               foregroundColor: Colors.grey[100],
             ),
