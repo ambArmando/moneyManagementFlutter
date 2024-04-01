@@ -94,8 +94,8 @@ class StatisticsState extends State<Statistics> {
         return Colors.pink[700]!;
       case CategoryEnum.house:
         return Colors.deepOrange[400]!;
-      case CategoryEnum.drinks:
-        return Colors.cyan;
+      default: 
+        return Colors.transparent;
     }
   }
 
@@ -275,6 +275,9 @@ class StatisticsState extends State<Statistics> {
     } 
     _currentDatesExpenses.remove(_currentDatesExpensesCopy[index]);
     _currentDatesExpensesCopy.removeAt(index);
+    if (_currentDatesExpensesCopy.isEmpty) {
+      touchedIndex = -1;
+    }
     setState(() {
       BuildExpensesMap();
       PopulateChart();
@@ -304,7 +307,7 @@ class StatisticsState extends State<Statistics> {
       }
     });
   }
-
+ 
   EditExpense(int index) {
     var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: _currentDatesExpensesCopy[index]);
     showDialog (context: context, builder: (context) => popup)
@@ -312,6 +315,10 @@ class StatisticsState extends State<Statistics> {
       if (popup.getExpense!.date.isBefore(startDate) || popup.getExpense!.date.isAfter(endDate)) {
         _currentDatesExpensesCopy.removeAt(index);
         _currentDatesExpenses.remove(_currentDatesExpensesCopy[index]);
+      }
+      if (_currentDatesExpensesCopy.length == 1) {
+        var selectedCategory = popup.getExpense!.category;
+        touchedIndex = _expensesMap.keys.toList().indexOf(selectedCategory);
       }
       setState(() {
         BuildExpensesMap();

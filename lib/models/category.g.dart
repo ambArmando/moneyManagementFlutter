@@ -107,7 +107,9 @@ const _CategorynameEnumValueMap = {
   'fun': 3,
   'payments': 4,
   'house': 5,
-  'drinks': 6,
+  'savings': 6,
+  'stock': 7,
+  'crypto': 8,
 };
 const _CategorynameValueEnumMap = {
   0: CategoryEnum.food,
@@ -116,7 +118,9 @@ const _CategorynameValueEnumMap = {
   3: CategoryEnum.fun,
   4: CategoryEnum.payments,
   5: CategoryEnum.house,
-  6: CategoryEnum.drinks,
+  6: CategoryEnum.savings,
+  7: CategoryEnum.stock,
+  8: CategoryEnum.crypto,
 };
 
 Id _categoryGetId(Category object) {

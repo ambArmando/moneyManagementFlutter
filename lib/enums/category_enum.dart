@@ -6,5 +6,7 @@ enum CategoryEnum {
   fun,
   payments,
   house,
-  drinks,
+  savings,
+  stock,
+  crypto,
 }
