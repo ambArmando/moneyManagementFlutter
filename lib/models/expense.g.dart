@@ -88,7 +88,7 @@ Expense _expenseDeserialize(
 ) {
   final object = Expense(
     category: _ExpensecategoryValueEnumMap[reader.readByteOrNull(offsets[0])] ??
-        CategoryEnum.food,
+        CategoryEnum.Housing,
     date: reader.readDateTime(offsets[1]),
     note: reader.readStringOrNull(offsets[2]),
     spendedValue: reader.readDouble(offsets[3]),
@@ -106,7 +106,7 @@ P _expenseDeserializeProp<P>(
   switch (propertyId) {
     case 0:
       return (_ExpensecategoryValueEnumMap[reader.readByteOrNull(offset)] ??
-          CategoryEnum.food) as P;
+          CategoryEnum.Housing) as P;
     case 1:
       return (reader.readDateTime(offset)) as P;
     case 2:
@@ -119,26 +119,38 @@ P _expenseDeserializeProp<P>(
 }
 
 const _ExpensecategoryEnumValueMap = {
-  'food': 0,
-  'shopping': 1,
-  'car': 2,
-  'fun': 3,
-  'payments': 4,
-  'house': 5,
-  'savings': 6,
-  'stock': 7,
-  'crypto': 8,
+  'Housing': 0,
+  'Utilities': 1,
+  'Transportation': 2,
+  'Groceries': 3,
+  'EmergencyFund': 4,
+  'ShortTermGoals': 5,
+  'LongTermGoals': 6,
+  'Education': 7,
+  'StockMarket': 8,
+  'Cryptocurrency': 9,
+  'Travel': 10,
+  'Hobbies': 11,
+  'Gifts': 12,
+  'Shopping': 13,
+  'DiningOut': 14,
 };
 const _ExpensecategoryValueEnumMap = {
-  0: CategoryEnum.food,
-  1: CategoryEnum.shopping,
-  2: CategoryEnum.car,
-  3: CategoryEnum.fun,
-  4: CategoryEnum.payments,
-  5: CategoryEnum.house,
-  6: CategoryEnum.savings,
-  7: CategoryEnum.stock,
-  8: CategoryEnum.crypto,
+  0: CategoryEnum.Housing,
+  1: CategoryEnum.Utilities,
+  2: CategoryEnum.Transportation,
+  3: CategoryEnum.Groceries,
+  4: CategoryEnum.EmergencyFund,
+  5: CategoryEnum.ShortTermGoals,
+  6: CategoryEnum.LongTermGoals,
+  7: CategoryEnum.Education,
+  8: CategoryEnum.StockMarket,
+  9: CategoryEnum.Cryptocurrency,
+  10: CategoryEnum.Travel,
+  11: CategoryEnum.Hobbies,
+  12: CategoryEnum.Gifts,
+  13: CategoryEnum.Shopping,
+  14: CategoryEnum.DiningOut,
 };
 
 Id _expenseGetId(Expense object) {

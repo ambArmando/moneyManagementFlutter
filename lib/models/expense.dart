@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:isar/isar.dart';
-import '../enums/category_enum.dart';
+import 'package:money_management/enums/category_enum.dart';
+import 'package:money_management/models/category.dart';
 
 part 'expense.g.dart';
 
@@ -21,6 +24,6 @@ class Expense {
     required this.category,
     required this.date,
     required this.note,
-  });
+  }) ;
 }
 

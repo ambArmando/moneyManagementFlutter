@@ -17,13 +17,19 @@ const CategorySchema = CollectionSchema(
   name: r'Category',
   id: 5751694338128944171,
   properties: {
-    r'imgPath': PropertySchema(
+    r'bugetCategory': PropertySchema(
       id: 0,
+      name: r'bugetCategory',
+      type: IsarType.byte,
+      enumMap: _CategorybugetCategoryEnumValueMap,
+    ),
+    r'imgPath': PropertySchema(
+      id: 1,
       name: r'imgPath',
       type: IsarType.string,
     ),
     r'name': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'name',
       type: IsarType.byte,
       enumMap: _CategorynameEnumValueMap,
@@ -64,8 +70,9 @@ void _categorySerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.imgPath);
-  writer.writeByte(offsets[1], object.name.index);
+  writer.writeByte(offsets[0], object.bugetCategory.index);
+  writer.writeString(offsets[1], object.imgPath);
+  writer.writeByte(offsets[2], object.name.index);
 }
 
 Category _categoryDeserialize(
@@ -75,9 +82,12 @@ Category _categoryDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Category(
-    imgPath: reader.readStringOrNull(offsets[0]),
-    name: _CategorynameValueEnumMap[reader.readByteOrNull(offsets[1])] ??
-        CategoryEnum.food,
+    bugetCategory:
+        _CategorybugetCategoryValueEnumMap[reader.readByteOrNull(offsets[0])] ??
+            BugetEnum.fixedCosts,
+    imgPath: reader.readStringOrNull(offsets[1]),
+    name: _CategorynameValueEnumMap[reader.readByteOrNull(offsets[2])] ??
+        CategoryEnum.Housing,
   );
   object.id = id;
   return object;
@@ -91,36 +101,64 @@ P _categoryDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readStringOrNull(offset)) as P;
+      return (_CategorybugetCategoryValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          BugetEnum.fixedCosts) as P;
     case 1:
+      return (reader.readStringOrNull(offset)) as P;
+    case 2:
       return (_CategorynameValueEnumMap[reader.readByteOrNull(offset)] ??
-          CategoryEnum.food) as P;
+          CategoryEnum.Housing) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
+const _CategorybugetCategoryEnumValueMap = {
+  'fixedCosts': 0,
+  'savings': 1,
+  'investing': 2,
+  'freeSpendings': 3,
+};
+const _CategorybugetCategoryValueEnumMap = {
+  0: BugetEnum.fixedCosts,
+  1: BugetEnum.savings,
+  2: BugetEnum.investing,
+  3: BugetEnum.freeSpendings,
+};
 const _CategorynameEnumValueMap = {
-  'food': 0,
-  'shopping': 1,
-  'car': 2,
-  'fun': 3,
-  'payments': 4,
-  'house': 5,
-  'savings': 6,
-  'stock': 7,
-  'crypto': 8,
+  'Housing': 0,
+  'Utilities': 1,
+  'Transportation': 2,
+  'Groceries': 3,
+  'EmergencyFund': 4,
+  'ShortTermGoals': 5,
+  'LongTermGoals': 6,
+  'Education': 7,
+  'StockMarket': 8,
+  'Cryptocurrency': 9,
+  'Travel': 10,
+  'Hobbies': 11,
+  'Gifts': 12,
+  'Shopping': 13,
+  'DiningOut': 14,
 };
 const _CategorynameValueEnumMap = {
-  0: CategoryEnum.food,
-  1: CategoryEnum.shopping,
-  2: CategoryEnum.car,
-  3: CategoryEnum.fun,
-  4: CategoryEnum.payments,
-  5: CategoryEnum.house,
-  6: CategoryEnum.savings,
-  7: CategoryEnum.stock,
-  8: CategoryEnum.crypto,
+  0: CategoryEnum.Housing,
+  1: CategoryEnum.Utilities,
+  2: CategoryEnum.Transportation,
+  3: CategoryEnum.Groceries,
+  4: CategoryEnum.EmergencyFund,
+  5: CategoryEnum.ShortTermGoals,
+  6: CategoryEnum.LongTermGoals,
+  7: CategoryEnum.Education,
+  8: CategoryEnum.StockMarket,
+  9: CategoryEnum.Cryptocurrency,
+  10: CategoryEnum.Travel,
+  11: CategoryEnum.Hobbies,
+  12: CategoryEnum.Gifts,
+  13: CategoryEnum.Shopping,
+  14: CategoryEnum.DiningOut,
 };
 
 Id _categoryGetId(Category object) {
@@ -212,6 +250,60 @@ extension CategoryQueryWhere on QueryBuilder<Category, Category, QWhereClause> {
 
 extension CategoryQueryFilter
     on QueryBuilder<Category, Category, QFilterCondition> {
+  QueryBuilder<Category, Category, QAfterFilterCondition> bugetCategoryEqualTo(
+      BugetEnum value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bugetCategory',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition>
+      bugetCategoryGreaterThan(
+    BugetEnum value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'bugetCategory',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> bugetCategoryLessThan(
+    BugetEnum value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'bugetCategory',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> bugetCategoryBetween(
+    BugetEnum lower,
+    BugetEnum upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'bugetCategory',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Category, Category, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -471,6 +563,18 @@ extension CategoryQueryLinks
     on QueryBuilder<Category, Category, QFilterCondition> {}
 
 extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByBugetCategory() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bugetCategory', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> sortByBugetCategoryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bugetCategory', Sort.desc);
+    });
+  }
+
   QueryBuilder<Category, Category, QAfterSortBy> sortByImgPath() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imgPath', Sort.asc);
@@ -498,6 +602,18 @@ extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
 
 extension CategoryQuerySortThenBy
     on QueryBuilder<Category, Category, QSortThenBy> {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByBugetCategory() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bugetCategory', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> thenByBugetCategoryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bugetCategory', Sort.desc);
+    });
+  }
+
   QueryBuilder<Category, Category, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -537,6 +653,12 @@ extension CategoryQuerySortThenBy
 
 extension CategoryQueryWhereDistinct
     on QueryBuilder<Category, Category, QDistinct> {
+  QueryBuilder<Category, Category, QDistinct> distinctByBugetCategory() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'bugetCategory');
+    });
+  }
+
   QueryBuilder<Category, Category, QDistinct> distinctByImgPath(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -556,6 +678,12 @@ extension CategoryQueryProperty
   QueryBuilder<Category, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Category, BugetEnum, QQueryOperations> bugetCategoryProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'bugetCategory');
     });
   }
 

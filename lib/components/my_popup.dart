@@ -1,6 +1,9 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:money_management/database/expense_database.dart';
+import 'package:money_management/models/category.dart';
 
 import '../enums/category_enum.dart';
 import '../models/expense.dart';
@@ -71,7 +74,7 @@ class MyPopupState extends State<MyPopup>{
                     items:  _localDb.defaultCategorys.map((category) {
                       return DropdownMenuItem(
                         value: category.name,
-                        child: Text(category.name.toString().split(".").last));
+                        child: Text(category.name.name));
                     }).toList(),
                     onChanged: (CategoryEnum? newSelectedCategory) {
                       setState(() {

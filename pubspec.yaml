@@ -34,7 +34,7 @@ dependencies:
     sdk: flutter
   isar: *isar_version
   path_provider: ^2.1.2
-  
+  carbon_icons: ^0.0.1+2
   isar_flutter_libs: *isar_version # contains Isar Core
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -69,12 +69,21 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/car.png
-    - assets/food.png
-    - assets/fun.png
-    - assets/house.png
+    - assets/transportation.png
+    - assets/groceries.png
+    - assets/diningout.png
+    - assets/housing.png
     - assets/shopping.png
-    - assets/payments.png
+    - assets/utilities.png
+    - assets/emergencyfund.png
+    - assets/shorttermgoals.png
+    - assets/longtermgoals.png
+    - assets/education.png
+    - assets/stockmarket.png
+    - assets/cryptocurrency.png
+    - assets/travel.png
+    - assets/hobbies.png
+    - assets/gifts.png
     
 
   # An image asset can refer to one or more resolution-specific "variants", see

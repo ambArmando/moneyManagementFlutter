@@ -1,12 +1,20 @@
 
+// ignore_for_file: constant_identifier_names
+
 enum CategoryEnum {
-  food,
-  shopping,
-  car,
-  fun,
-  payments,
-  house,
-  savings,
-  stock,
-  crypto,
+  Housing,
+  Utilities,
+  Transportation,
+  Groceries,
+  EmergencyFund,
+  ShortTermGoals,
+  LongTermGoals,
+  Education,
+  StockMarket,
+  Cryptocurrency,
+  Travel,
+  Hobbies,
+  Gifts,
+  Shopping,
+  DiningOut,
 }

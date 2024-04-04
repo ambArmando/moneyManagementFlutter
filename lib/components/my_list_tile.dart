@@ -40,7 +40,7 @@ class MyListTile extends StatelessWidget {
           children: [
             ListTile(
               title: Text(expense.category.name),
-              leading: Image.asset("assets/${expense.category.name}.png", width: 26.0, height: 26.0,),
+              leading: Image.asset("assets/${expense.category.name.toLowerCase()}.png", width: 26.0, height: 26.0,),
               subtitle: Text(expense.note.toString()),
               trailing: SizedBox(
                 width: 130,

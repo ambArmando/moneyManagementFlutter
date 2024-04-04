@@ -23,7 +23,7 @@ class StatisticsState extends State<Statistics> {
   List<PieChartSectionData> _pieData = [];
   Map<CategoryEnum, double> _expensesMap = {};
   DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
-  DateTime endDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime endDate = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
   String totalSpendingsBetweenDates = "0";
   List<Expense> _currentDatesExpensesCopy = [];
   int? touchedIndex = -1;
@@ -70,7 +70,7 @@ class StatisticsState extends State<Statistics> {
         value: value,
         showTitle: true,
         title: value.toString(),
-        radius: expensesMapKeys.indexOf(key) == touchedIndex ? 60 : 50,
+        radius: expensesMapKeys.indexOf(key) == touchedIndex ? 70 : 60,
         titleStyle: TextStyle(
           fontSize: expensesMapKeys.indexOf(key) == touchedIndex ? 25 : 15,
           fontWeight: expensesMapKeys.indexOf(key) == touchedIndex ? FontWeight.bold : FontWeight.normal,
@@ -82,17 +82,35 @@ class StatisticsState extends State<Statistics> {
 
   Color GetCategoryColor(CategoryEnum category) {
     switch(category){
-      case CategoryEnum.food:
+      case CategoryEnum.Housing:
         return Colors.green;
-      case CategoryEnum.shopping:
-        return Colors.blue;
-      case CategoryEnum.car:
-        return Colors.red;
-      case CategoryEnum.fun:
-        return const Color.fromARGB(255, 250, 228, 34);
-      case CategoryEnum.payments:
+      case CategoryEnum.Utilities:
+        return Colors.green[200]!;
+      case CategoryEnum.Transportation:
+        return Colors.green[300]!;
+      case CategoryEnum.Groceries:
+        return Colors.green[400]!;
+      case CategoryEnum.EmergencyFund:
         return Colors.pink[700]!;
-      case CategoryEnum.house:
+      case CategoryEnum.ShortTermGoals:
+        return Colors.deepOrange[400]!;
+      case CategoryEnum.LongTermGoals:
+        return Colors.deepOrange[400]!;
+      case CategoryEnum.Education:
+        return Colors.deepOrange[400]!;
+      case CategoryEnum.StockMarket:
+        return Colors.deepOrange[400]!;
+      case CategoryEnum.Cryptocurrency:
+        return Colors.deepOrange[400]!;
+      case CategoryEnum.Travel:
+        return Colors.deepOrange[400]!;
+      case CategoryEnum.Hobbies:
+        return Colors.deepOrange[400]!;
+      case CategoryEnum.Gifts:
+        return Colors.deepOrange[400]!;
+      case CategoryEnum.Shopping:
+        return Colors.deepOrange[400]!;
+      case CategoryEnum.DiningOut:
         return Colors.deepOrange[400]!;
       default: 
         return Colors.transparent;
@@ -192,7 +210,7 @@ class StatisticsState extends State<Statistics> {
                     ],),
                   ),
                   Expanded(
-                    flex: 2,
+                    flex: 4,
                     child: Container(
                       color: Colors.grey[100],
                       child: Stack(
@@ -244,7 +262,9 @@ class StatisticsState extends State<Statistics> {
                           Positioned(
                             bottom: 0,
                             left: 5,
-                            child: _pieLegend(),
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width,
+                              child: _pieLegend()),
                           ),
                         ],
                       ),
@@ -360,17 +380,20 @@ class StatisticsState extends State<Statistics> {
     for(var key in _expensesMap.keys) {
       legend.add(Row(
         children: [
-          Container(width: 20, height: 20, color: GetCategoryColor(key),),
+          Container(width: 20, height: 20, color: GetCategoryColor(key), margin: const EdgeInsets.only(bottom: 3),),
           Container(
             margin: const EdgeInsets.only(left: 5, bottom: 5),
-            child: Text(key.name)),
+            child: Text(key.name)
+          ),
+          const SizedBox(width: 15)
         ],
       ));
     }
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: legend
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: legend
+      ),
     );
   }
 

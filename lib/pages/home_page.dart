@@ -1,10 +1,10 @@
 // ignore_for_file: non_constant_identifier_names
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:money_management/components/my_list_tile.dart';
 import 'package:money_management/components/my_popup.dart';
 import 'package:money_management/database/expense_database.dart';
+import 'package:money_management/enums/buget_categories_enum.dart';
+import 'package:money_management/enums/category_enum.dart';
 import 'package:money_management/models/expense.dart';
 import 'package:intl/intl.dart';
 
@@ -93,23 +93,26 @@ class HomePageState extends State<HomePage> {
                   child: Container(
                     width: 80,
                     margin: const EdgeInsets.symmetric(horizontal: 9),
-                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: index == selectedCategoryIndex ? Colors.deepOrange[500] : Colors.grey[200],
-                      
+                      color: index == selectedCategoryIndex ? Colors.grey[300] : GetColorForCategory(localDb.defaultCategorys[index].bugetCategory),
                     ),
-                    child: Column(
+                    child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        Image.asset("assets/${localDb.defaultCategorys.map((category) => category.name.toString().split(".").last).toList()[index]}.png", width: 26.0, height: 26.0,),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 6.0),
-                            child: Text(localDb.defaultCategorys.map((category) => category.name.toString().split(".").last).toList()[index],
-                              maxLines: 1,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                overflow: TextOverflow.visible,
-                              ),
+                        Positioned(
+                          top: 0,
+                          right: 2,
+                          child: Icon(Icons.warning_amber_rounded, color: Colors.red[600], size: 22,)
+                        ),
+                        Positioned(
+                          top: 10,
+                          child: Image.asset("assets/${localDb.defaultCategorys.map((category) => category.name.name.toLowerCase()).toList()[index]}.png", width: 26.0, height: 26.0,)),
+                        Positioned(
+                          bottom: 3,
+                          child: Text(localDb.defaultCategorys.map((e) => e.name.name).toList()[index],
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontSize: 12,
                             ),
                           ),
                         ),
@@ -257,6 +260,19 @@ class HomePageState extends State<HomePage> {
     return '0';
   }
 
+  Color GetColorForCategory(BugetEnum bugetEnum) {
+    switch(bugetEnum) {
+      case BugetEnum.fixedCosts:
+        return const Color.fromARGB(255, 124, 155, 255);
+      case BugetEnum.freeSpendings:
+        return const Color.fromARGB(255, 152, 255, 152);
+      case BugetEnum.savings:
+        return const Color.fromARGB(255, 213, 178, 248);
+      case BugetEnum.investing:
+        return const Color.fromARGB(255, 255, 215, 152);
+    }
+  }
+
   AddNewExpense() {
     if (displayedValue.isEmpty) return;
     var now = DateTime.now();
@@ -284,6 +300,10 @@ class HomePageState extends State<HomePage> {
     });
   }
 
+  ShowBudgetLimitWarning() {
+
+  }
+
   RemoveValue() {
     if (displayedValue.isEmpty) return;
     setState(() {
@@ -297,6 +317,5 @@ class HomePageState extends State<HomePage> {
     _scrollController.dispose();
     noteController.dispose();
     spendedValueController.dispose();
-  }
-  
+  }  
 }

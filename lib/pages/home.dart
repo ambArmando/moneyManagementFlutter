@@ -13,7 +13,7 @@ class HomeState extends State<Home> {
   final List<Widget> _navigationPages = [
     HomePage(),
     Statistics(),
-    Buget(),
+    BugetView(),
   ];
 
   @override

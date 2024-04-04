@@ -1,21 +1,21 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/enums/buget_categories_enum.dart';
 import 'package:money_management/enums/category_enum.dart';
+import 'package:money_management/models/buget.dart';
 import 'package:money_management/models/expense.dart';
 
-class Buget extends StatefulWidget {
-  
+class BugetView extends StatefulWidget {
+  const BugetView({super.key});
+
   @override
   State<StatefulWidget> createState() => BugetState();
 }
 
-class BugetState extends State<Buget> {
+class BugetState extends State<BugetView> {
   final TextEditingController _bugetController = TextEditingController();
   ExpenseDatabase localDb = ExpenseDatabase();
   late Future<void> _initFuture;
@@ -27,6 +27,7 @@ class BugetState extends State<Buget> {
     BugetEnum.freeSpendings : 0,
   };
   List<BarChartGroupData> _barChartData = [];
+  late Buget? currentBuget;
 
   @override
   void initState() {
@@ -38,11 +39,14 @@ class BugetState extends State<Buget> {
     var firstDayOfCurrentMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
     var lastDayOfCurrentMonth = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
     selectedMonthExpenses = await localDb.getExpensesBetweenDates(firstDayOfCurrentMonth, lastDayOfCurrentMonth);
+    currentBuget = await localDb.getBuget(DateTime.now().month, DateTime.now().year);
+    currentBuget != null ? _bugetController.text = currentBuget!.value.toString() : "";
     BuildBugetMap();
     PopulateChart();
   }
 
   void BuildBugetMap() {
+    ClearBugetMap();
     for (var expense in selectedMonthExpenses) {
       switch (GetExpenseBugetCategory(expense.category)){
         case BugetEnum.fixedCosts:
@@ -57,24 +61,35 @@ class BugetState extends State<Buget> {
         case BugetEnum.freeSpendings:
           _bugetMap[BugetEnum.freeSpendings] = _bugetMap[BugetEnum.freeSpendings]! + expense.spendedValue;
           break;
+        case null:
+          // TODO: Handle this case.
       }
     }
   }
 
+  void ClearBugetMap() {
+    _bugetMap[BugetEnum.fixedCosts] = 0;
+    _bugetMap[BugetEnum.savings] = 0;
+    _bugetMap[BugetEnum.investing] = 0;
+    _bugetMap[BugetEnum.freeSpendings] = 0;
+  }
+
   void PopulateChart() {
+    _barChartData.clear();
     _bugetMap.forEach((key, value) {
       _barChartData.add(
         BarChartGroupData(
           x: key.index,
           barRods: [
             BarChartRodData(
-              toY: value,
-              width: 25,
+              toY: value > GetBarRodMaxY(key) ? GetBarRodMaxY(key) : value,
+              width: 45,
               borderRadius: BorderRadius.circular(4),
+              color: GetRodColor(key),
               backDrawRodData: BackgroundBarChartRodData(
                 show: true,
                 toY: GetBarRodMaxY(key),
-                color: Colors.grey[200],
+                color: Colors.grey[300],
               )
             ),
           ]
@@ -83,11 +98,26 @@ class BugetState extends State<Buget> {
     });
   }
 
+  Color GetRodColor(BugetEnum bugetEnum) {
+    switch(bugetEnum){
+      case BugetEnum.fixedCosts:
+        return const Color.fromARGB(255, 124, 155, 255);
+      case BugetEnum.freeSpendings:
+        return const Color.fromARGB(255, 152, 255, 152);
+      case BugetEnum.savings:
+        return const Color.fromARGB(255, 213, 178, 248);
+      case BugetEnum.investing:
+        return const Color.fromARGB(255, 255, 215, 152);
+    }
+  }
+
   double GetBarRodMaxY(BugetEnum bugetEnum) {
-    var buget = 5000;
+    if (currentBuget == null) {
+      return 0;
+    }
     var percentage = GetPercentage(bugetEnum);
 
-    return (buget * percentage) / 100;
+    return (currentBuget!.value * percentage) / 100;
   }
 
   int GetPercentage(BugetEnum bugetEnum) {
@@ -105,18 +135,24 @@ class BugetState extends State<Buget> {
 
   BugetEnum GetExpenseBugetCategory(CategoryEnum expenseCategory) {
     switch(expenseCategory){
-      case CategoryEnum.food:
-      case CategoryEnum.house:
-      case CategoryEnum.payments:
+      case CategoryEnum.Housing:
+      case CategoryEnum.Utilities:
+      case CategoryEnum.Transportation:
+      case CategoryEnum.Groceries:
         return BugetEnum.fixedCosts;
-      case CategoryEnum.shopping:
-      case CategoryEnum.car:
-      case CategoryEnum.fun:
+      case CategoryEnum.Travel:
+      case CategoryEnum.Hobbies:
+      case CategoryEnum.Gifts:
+      case CategoryEnum.Shopping:
+      case CategoryEnum.DiningOut:
         return BugetEnum.freeSpendings;
-      case CategoryEnum.savings:
+      case CategoryEnum.EmergencyFund:
+      case CategoryEnum.ShortTermGoals:
+      case CategoryEnum.LongTermGoals:
         return BugetEnum.savings;
-      case CategoryEnum.stock:
-      case CategoryEnum.crypto:
+      case CategoryEnum.Education:
+      case CategoryEnum.StockMarket:
+      case CategoryEnum.Cryptocurrency:
         return BugetEnum.investing;
       default: 
         return BugetEnum.freeSpendings;
@@ -129,7 +165,7 @@ class BugetState extends State<Buget> {
       future: _initFuture,
       builder: (context, snaphot) {
         if (snaphot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
+          return const Center(child: CircularProgressIndicator());
         } else if (snaphot.hasError) {
           return const Center(child: Text("Error occured"),);
         }
@@ -145,86 +181,194 @@ class BugetState extends State<Buget> {
     return Scaffold(
       body: Column(
         children: [
-          Expanded(
-            flex: 1,
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 5),
+                  child:  Text("RON", style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800]
+                  ),),
+                ),
+                const SizedBox(width: 10),
                 SizedBox(
-                  width: 200,
+                  width: 100,
                   child: TextField(
                     keyboardType: TextInputType.number,
-                    textAlignVertical: TextAlignVertical.top,
-                    controller: _bugetController,
+                    controller: _bugetController,     
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[800]
+                    ),
                     decoration: const InputDecoration(
-                      label: Text("Buget", style: TextStyle(
-                        fontSize: 20
-                      ),),
-                      hintText: "enter your buget...",
-                      helperText: "RON",
-                      border: OutlineInputBorder(),
+                      hintText: "buget..."
                     ),
                   ),
                 ),
-                const ElevatedButton(onPressed: null, child: Icon(Icons.save)),
               ],
             ),
           ),
+          ElevatedButton(onPressed: () {
+                  if (_bugetController.text.isEmpty) {
+                    return;
+                  }
+                  _updateBuget(context);
+                }, child: const Text("Change buget"),
+          ),
+          const SizedBox(height: 30),
           Expanded(
-            flex: 3,
-            child: BarChart(
+            child: currentBuget == null || currentBuget!.value == 0 ? const Center(child: Text("Please save a buget first!"),) : BarChart(             
               BarChartData(
-                maxY: 2500,
+                maxY: GetMaxY(),
                 minY: 0,
-                gridData: FlGridData(show: false),
+                gridData: const FlGridData(show: true),
                 borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
                   show: true,
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: getTopTitles)),
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: getBottomTitles)),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: getTopTitles, reservedSize: 50)),
+                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: getBottomTitles)),
                 ),
-                alignment: BarChartAlignment.spaceEvenly,
+                alignment: BarChartAlignment.spaceAround,
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    fitInsideHorizontally: true,
+                    tooltipBgColor: Colors.blueGrey,
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      var bugetMapKeys = _bugetMap.keys.toList();
+                      var tip = "Available buget for ${bugetMapKeys.elementAt(groupIndex).name} is ${group.barRods[0].backDrawRodData.toY} RON; ${GetPercentage(bugetMapKeys.elementAt(groupIndex))}% from the total of ${currentBuget!.value} RON";
+                      return BarTooltipItem(tip, const TextStyle(color: Colors.white));
+                    },
+                  )
+                ),
                 barGroups: _barChartData,
               )
-            )
+            ),
           ),
-          Expanded(
-            flex: 2,
-            child: Container())
+          const SizedBox(height: 30),
         ],
       ),
     );
   }  
 
+  double GetMaxY() {
+    if (currentBuget == null) {
+      return 0;
+    }
+    return currentBuget!.value / 2;
+  }
+
+  void _updateBuget(context) {
+    showDialog(context: context,
+     builder: (BuildContext context) {
+      return AlertDialog (
+          title: const Text("Change buget confirmation"),
+          content: const Text("Are you sure you want to continue?"),
+          actions: [
+            TextButton(onPressed: () {
+              if (_bugetController.text.isNotEmpty) {
+                currentBuget ??= Buget(
+                  value: double.tryParse(_bugetController.text)!,
+                  month: DateTime.now().month,
+                  year: DateTime.now().year
+                );
+                setState(() {
+                  currentBuget!.value = double.tryParse(_bugetController.text)!;
+                  BuildBugetMap();
+                  PopulateChart();
+                  localDb.updateBuget(currentBuget!);
+                  Navigator.of(context).pop();
+                });
+              }
+            }, 
+            child: const Text("Yes")),
+            TextButton(onPressed: () => {
+              Navigator.of(context).pop()
+            }, 
+            child: const Text("No"))
+          ],
+        );
+      }
+    );
+  }
+
   Widget getTopTitles(double value, TitleMeta meta) {
   var style = TextStyle(
-    color: Colors.grey[600],
+    color:  Colors.grey[600],
     fontWeight: FontWeight.bold,
-    fontSize: 11,
+    fontSize: 11.5,
   );
-  Widget text;
+  Widget child;
   switch (value.toInt()) {
     case 0:
-      text = Text("${GetBarRodMaxY(BugetEnum.fixedCosts).toString()} RON", style: style,);
+      child = Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text("RON ${GetRemainingBuget(BugetEnum.fixedCosts)} left", style: TextStyle(
+            color: double.parse(GetRemainingBuget(BugetEnum.fixedCosts)) < 0 ? Colors.red[400] : Colors.green[400],
+            fontWeight: FontWeight.bold,
+            fontSize: 11.5,
+          ),),
+          Text("of ${GetBarRodMaxY(BugetEnum.fixedCosts).toString()} RON", style: style)
+        ],);
       break;
     case 1:
-      text = Text(GetBarRodMaxY(BugetEnum.savings).toString(), style: style,);
+      child = Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text("RON ${GetRemainingBuget(BugetEnum.savings)} left ", style: TextStyle(
+            color: double.parse(GetRemainingBuget(BugetEnum.savings)) < 0 ? Colors.red[400] : Colors.green[400],
+            fontWeight: FontWeight.bold,
+            fontSize: 11.5,
+          ),),
+          Text("of ${GetBarRodMaxY(BugetEnum.savings).toString()} RON", style: style)
+        ],);
       break;
     case 2:
-      text = Text(GetBarRodMaxY(BugetEnum.investing).toString(), style: style,);
+      child = Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text("RON ${GetRemainingBuget(BugetEnum.investing)} left ", style: TextStyle(
+            color: double.parse(GetRemainingBuget(BugetEnum.investing)) < 0 ? Colors.red[400] : Colors.green[400],
+            fontWeight: FontWeight.bold,
+            fontSize: 11.5,
+          ),),
+          Text("of ${GetBarRodMaxY(BugetEnum.investing).toString()} RON", style: style)
+        ],);
       break;
     case 3:
-      text = Text(GetBarRodMaxY(BugetEnum.freeSpendings).toString(), style: style,);
-      break;
-    default:
-      text = const Text("");
+      child = Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text("RON ${GetRemainingBuget(BugetEnum.freeSpendings)} left ", style: TextStyle(
+            color: double.parse(GetRemainingBuget(BugetEnum.freeSpendings)) < 0 ? Colors.red[400] : Colors.green[400],
+            fontWeight: FontWeight.bold,
+            fontSize: 11.5,
+          ),),
+          Text("of ${GetBarRodMaxY(BugetEnum.freeSpendings).toString()} RON", style: style)
+        ],);
+        break;
+    default: 
+      child = const Text("");
       break;
   }
-  return SideTitleWidget(axisSide: meta.axisSide, child: text);
-}
+  return SideTitleWidget(axisSide: meta.axisSide, child: child);
+  }
+
+  String GetRemainingBuget(BugetEnum bugetEnum) {
+    var remainingValue = GetBarRodMaxY(bugetEnum) - _bugetMap[bugetEnum]!;
+
+    return remainingValue.toString();
+  }
+
 }
 
 Widget getBottomTitles(double value, TitleMeta meta) {
@@ -232,21 +376,20 @@ Widget getBottomTitles(double value, TitleMeta meta) {
     color: Colors.grey[600],
     fontWeight: FontWeight.bold,
     fontSize: 11,
-    
   );
   Widget text;
   switch (value.toInt()) {
     case 0:
-      text = Text(BugetEnum.fixedCosts.name, style: style,);
+      text = Text("Fixed Costs", style: style,);
       break;
     case 1:
-      text = Text(BugetEnum.savings.name, style: style,);
+      text = Text("Savings", style: style,);
       break;
     case 2:
-      text = Text(BugetEnum.investing.name, style: style,);
+      text = Text("Investings", style: style,);
       break;
     case 3:
-      text = Text(BugetEnum.freeSpendings.name, style: style,);
+      text = Text("Free Spendings", style: style,);
       break;
     default:
       text = const Text("");

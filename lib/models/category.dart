@@ -1,4 +1,6 @@
+
 import 'package:isar/isar.dart';
+import 'package:money_management/enums/buget_categories_enum.dart';
 import '../enums/category_enum.dart';
 
 part 'category.g.dart';
@@ -9,11 +11,16 @@ class Category {
   
   @enumerated
   final CategoryEnum name;
+  
+  @enumerated
+  final BugetEnum bugetCategory;
 
   final String? imgPath;
 
   Category({
     required this.name,
-    required this.imgPath,
+    required this.bugetCategory,
+    this.imgPath,
   });
+
 }
