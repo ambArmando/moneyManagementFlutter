@@ -1,11 +1,7 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/models/category.dart';
-
-import '../enums/category_enum.dart';
 import '../models/expense.dart';
 
 class MyPopup extends StatefulWidget {
@@ -32,7 +28,7 @@ class MyPopupState extends State<MyPopup>{
   final TextEditingController _noteController = TextEditingController();
   late ExpenseDatabase _localDb;
   DateTime? selectedDate = DateTime.now();
-  CategoryEnum? selectedCategory;
+  Category? selectedCategory;
   Expense? _expense;
   
   @override
@@ -45,7 +41,7 @@ class MyPopupState extends State<MyPopup>{
     if (widget.expense != null) {
       _spendedValueController.text = widget.expense!.spendedValue.toString();
       _noteController.text = widget.expense!.note.toString();
-      selectedCategory = widget.expense!.category;
+      selectedCategory = widget.expense!.category.value;
       selectedDate = widget.expense!.date;
     }
   }
@@ -67,18 +63,18 @@ class MyPopupState extends State<MyPopup>{
                     decoration: const InputDecoration(hintText: "Value"),
                   ),
                   const SizedBox(height: 15),
-                  DropdownButton<CategoryEnum>(
+                  DropdownButton<Category>(
                     hint: const Text("Select category"),
                     isExpanded: true,
-                    value: selectedCategory,
+                    value: null,
                     items:  _localDb.defaultCategorys.map((category) {
                       return DropdownMenuItem(
-                        value: category.name,
+                        value: category,
                         child: Text(category.name.name));
                     }).toList(),
-                    onChanged: (CategoryEnum? newSelectedCategory) {
+                    onChanged: (Category? newSelectedCategory) {
                       setState(() {
-                      selectedCategory = newSelectedCategory!;
+                      selectedCategory = newSelectedCategory;
                     });
                     },
                   ),
@@ -143,8 +139,8 @@ class MyPopupState extends State<MyPopup>{
         if (widget.expense == null && _spendedValueController.text.isNotEmpty && selectedCategory != null)
         {
           Expense newExpense = Expense(
-            spendedValue: double.parse(_spendedValueController.text),
-            category: selectedCategory!, 
+            spendedValue: double.parse(_spendedValueController.text), 
+            category: selectedCategory,
             date: selectedDate!, 
             note: _noteController.text,
           );
@@ -153,7 +149,7 @@ class MyPopupState extends State<MyPopup>{
           _localDb.createNewExpense(newExpense);
         } else if (widget.expense != null) {
           widget.expense!.spendedValue = double.parse(_spendedValueController.text);
-          widget.expense!.category = selectedCategory!;
+          widget.expense!.category.value = selectedCategory!;
           widget.expense!.note = _noteController.text;
           widget.expense!.date = selectedDate!;
           Navigator.pop(context);

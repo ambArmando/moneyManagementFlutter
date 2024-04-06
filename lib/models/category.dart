@@ -1,6 +1,7 @@
 
 import 'package:isar/isar.dart';
 import 'package:money_management/enums/buget_categories_enum.dart';
+import 'package:money_management/models/expense.dart';
 import '../enums/category_enum.dart';
 
 part 'category.g.dart';

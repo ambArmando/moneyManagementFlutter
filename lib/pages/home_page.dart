@@ -1,12 +1,16 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:money_management/components/my_list_tile.dart';
 import 'package:money_management/components/my_popup.dart';
+import 'package:money_management/components/store.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/enums/buget_categories_enum.dart';
-import 'package:money_management/enums/category_enum.dart';
+import 'package:money_management/models/budget.dart';
+import 'package:money_management/models/category.dart';
 import 'package:money_management/models/expense.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget{
   const HomePage({super.key});
@@ -18,13 +22,23 @@ class HomePage extends StatefulWidget{
 class HomePageState extends State<HomePage> {
   int? selectedCategoryIndex;
   ExpenseDatabase localDb = ExpenseDatabase();
-  List<Expense> fetchedExpenses = [];
+  List<Expense> currentDayExpenses = [];
+  List<Expense> monthExpenses = [];
   TextEditingController spendedValueController = TextEditingController();
   TextEditingController noteController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String displayedValue = "";
   String? totalDaySpendings;
   bool isLoading = true;
+  late Budget? setBudget;
+  Map<BugetEnum, double> _categoriesTotal = {
+    BugetEnum.fixedCosts : 0,
+    BugetEnum.savings : 0,
+    BugetEnum.investing : 0,
+    BugetEnum.freeSpendings : 0,
+  };
+  DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
+  DateTime endDate = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
 
  //figure a way to call the current day expenses only when the app is opened for the first time
   @override
@@ -35,18 +49,33 @@ class HomePageState extends State<HomePage> {
   }
 
   void LoadExpenses() async {
-    var expenses = await localDb.getCurrentDayExpenses();
+    //var expenses = await localDb.getCurrentDayExpenses();
+    monthExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
+    var expenses = monthExpenses.where((element) => element.date.day == DateTime.now().day && element.date.month == DateTime.now().month && element.date.year == DateTime.now().year).toList();
+    setBudget = await localDb.getBuget(DateTime.now().month, DateTime.now().year);
+    BuildCategoriesTotal();
     totalDaySpendings = expenses.isNotEmpty ? expenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString() : "0";
     setState((){
-      fetchedExpenses = expenses;
+      currentDayExpenses = expenses;
       isLoading = false;
     });
+  }
+
+  BuildCategoriesTotal() {
+    CategoriesTotalReset();
+    for (var expense in monthExpenses) {
+      _categoriesTotal[expense.category.value!.bugetCategory] = _categoriesTotal[expense.category.value!.bugetCategory]! + expense.spendedValue;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      floatingActionButton: TextButton(
+        onPressed: () => {localDb.deleteAllData()},
+        child: const Text("Delete data")
+      ),
       body: isLoading ? const Center(child: CircularProgressIndicator(),) : Column(
         children: [
           const SizedBox(height: 35),
@@ -86,56 +115,63 @@ class HomePageState extends State<HomePage> {
           SizedBox(
             height: 60,
             child: Center(
-              child: ListView.builder(
-                itemCount: localDb.defaultCategorys.length,
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (context, int index) => GestureDetector(
-                  child: Container(
-                    width: 80,
-                    margin: const EdgeInsets.symmetric(horizontal: 9),
-                    decoration: BoxDecoration(
-                      color: index == selectedCategoryIndex ? Colors.grey[300] : GetColorForCategory(localDb.defaultCategorys[index].bugetCategory),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Positioned(
-                          top: 0,
-                          right: 2,
-                          child: Icon(Icons.warning_amber_rounded, color: Colors.red[600], size: 22,)
+              child: Consumer<Store>(
+                builder: (context, store, _)
+                {
+                  return ListView.builder(
+                    itemCount: localDb.defaultCategorys.length,
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (context, int index) => GestureDetector(
+                      child: Container(
+                        width: 80,
+                        margin: const EdgeInsets.symmetric(horizontal: 9),
+                        decoration: BoxDecoration(
+                          color: index == selectedCategoryIndex ? Colors.grey[300] : GetColorForCategory(localDb.defaultCategorys[index].bugetCategory),
                         ),
-                        Positioned(
-                          top: 10,
-                          child: Image.asset("assets/${localDb.defaultCategorys.map((category) => category.name.name.toLowerCase()).toList()[index]}.png", width: 26.0, height: 26.0,)),
-                        Positioned(
-                          bottom: 3,
-                          child: Text(localDb.defaultCategorys.map((e) => e.name.name).toList()[index],
-                            maxLines: 1,
-                            style: const TextStyle(
-                              fontSize: 12,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Positioned(
+                              top: 0,
+                              right: 2,
+                              child: Visibility(
+                                visible: (setBudget?.value ?? 0) > 0 && (isBudgetAboveLimit(store, localDb.defaultCategorys[index]) || isBudgetAboveLimitHomePage(localDb.defaultCategorys[index])),
+                                child: Icon(Icons.warning_amber_rounded, color: Colors.red[600], size: 22,))
                             ),
-                          ),
+                            Positioned(
+                              top: 10,
+                              child: Image.asset("assets/${localDb.defaultCategorys.map((category) => category.name.name.toLowerCase()).toList()[index]}.png", width: 26.0, height: 26.0,)),
+                            Positioned(
+                              bottom: 3,
+                              child: Text(localDb.defaultCategorys.map((e) => e.name.name).toList()[index],
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      selectedCategoryIndex = index;
-                    });
-                  },
-                )
+                      ),
+                      onTap: () {
+                        setState(() {
+                          selectedCategoryIndex = index;
+                        });
+                      },
+                    )
+                  );
+                },
               ),
             ),
           ),
           const SizedBox(height: 20),
-          Container(
+          SizedBox(
             height: 280,
             child: ListView.builder(
               controller: _scrollController,
-              itemCount: fetchedExpenses.length,
+              itemCount: currentDayExpenses.length,
               itemBuilder: (context, int index) { 
-                Expense individualExpense = fetchedExpenses[index];
+                Expense individualExpense = currentDayExpenses[index];
                 return MyListTile(
                   expense: individualExpense,
                   onEditPressed: (context) => {EditExpense(index)},
@@ -209,6 +245,51 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  bool isBudgetAboveLimit(Store store, Category category) {
+    if (store.isBudgetCategoryValueAboveLimitMap.containsKey(category.bugetCategory)) {
+      return store.isBudgetCategoryValueAboveLimitMap[category.bugetCategory] ?? false;
+    }
+    return false;
+  }
+
+  bool isBudgetAboveLimitHomePage(Category category) {
+    print("category = ${category.name}");
+    print("${category.bugetCategory} ${_categoriesTotal[category.bugetCategory]}");
+    print("${GetMaxBudget(category.bugetCategory)}");
+    return _categoriesTotal[category.bugetCategory]! > GetMaxBudget(category.bugetCategory);
+  }
+
+  CategoriesTotalReset () {
+    _categoriesTotal = {
+      BugetEnum.fixedCosts : 0,
+      BugetEnum.savings : 0,
+      BugetEnum.investing : 0,
+      BugetEnum.freeSpendings : 0,
+    };
+  } 
+
+  double GetMaxBudget(BugetEnum bugetEnum) {
+    if (setBudget == null) {
+      return 0;
+    }
+    var percentage = GetPercentage(bugetEnum);
+
+    return (setBudget!.value * percentage) / 100;
+  }
+
+  int GetPercentage(BugetEnum bugetEnum) {
+    switch(bugetEnum){
+      case BugetEnum.fixedCosts:
+        return 50;
+      case BugetEnum.freeSpendings:
+        return 35;
+      case BugetEnum.savings:
+        return 10;
+      case BugetEnum.investing:
+        return 5;
+    }
+  }
+
   void NewExpenseFromPopup(BuildContext context) {
     var popup = MyPopup(
           title: "New expense",
@@ -220,7 +301,7 @@ class HomePageState extends State<HomePage> {
     ).then((value) {
       if (popup.getExpense != null && popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) {
         setState(() {
-          fetchedExpenses.add(popup.getExpense!);
+          currentDayExpenses.add(popup.getExpense!);
           totalDaySpendings = CurrentDaySpendings();
         });
       }
@@ -230,22 +311,25 @@ class HomePageState extends State<HomePage> {
   }
 
   DeleteExpense(int index) {
-    var deletedExpenseId = fetchedExpenses[index].id;
+    var deletedExpenseId = currentDayExpenses[index].id;
     localDb.deleteExpense(deletedExpenseId);
     setState(() {
-      fetchedExpenses.removeAt(index);
+      monthExpenses.remove(currentDayExpenses[index]);
+      currentDayExpenses.removeAt(index);
+      BuildCategoriesTotal();
       totalDaySpendings = CurrentDaySpendings();
     });
   }
 
   EditExpense(int index) {
-    var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: fetchedExpenses[index],);
+    var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: currentDayExpenses[index],);
     showDialog (context: context, builder: (context) => popup)
     .then((value) {
-      (popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) ? fetchedExpenses[index] = popup.getExpense! : fetchedExpenses.removeAt(index);
-      var updatedList = fetchedExpenses;
+      (popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) ? currentDayExpenses[index] = popup.getExpense! : currentDayExpenses.removeAt(index);
+      var updatedList = currentDayExpenses;
       setState(() {
-        fetchedExpenses = updatedList;
+        currentDayExpenses = updatedList;
+        BuildCategoriesTotal();
         totalDaySpendings = CurrentDaySpendings();
       });
     spendedValueController.clear();
@@ -254,8 +338,8 @@ class HomePageState extends State<HomePage> {
   }
 
   String CurrentDaySpendings() {
-    if (fetchedExpenses.isNotEmpty) {
-      return totalDaySpendings = fetchedExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString();
+    if (currentDayExpenses.isNotEmpty) {
+      return totalDaySpendings = currentDayExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString();
     }
     return '0';
   }
@@ -277,10 +361,17 @@ class HomePageState extends State<HomePage> {
     if (displayedValue.isEmpty) return;
     var now = DateTime.now();
     selectedCategoryIndex ??= 0;
-    Expense expense = Expense(spendedValue: double.parse(displayedValue), category: localDb.defaultCategorys[selectedCategoryIndex!].name, date: DateTime(now.year, now.month, now.day), note: "");
+    Expense expense = Expense(
+      spendedValue: double.parse(displayedValue),
+      category: localDb.defaultCategorys[selectedCategoryIndex!],
+      date: DateTime(now.year, now.month, now.day),
+      note: ""
+    );
     localDb.createNewExpense(expense);
     setState(() {
-      fetchedExpenses.add(expense);
+      currentDayExpenses.add(expense);
+      monthExpenses.add(expense);
+      BuildCategoriesTotal();
       displayedValue = "";
       totalDaySpendings = CurrentDaySpendings();
     });
@@ -298,10 +389,6 @@ class HomePageState extends State<HomePage> {
     setState(() {
       displayedValue += value;
     });
-  }
-
-  ShowBudgetLimitWarning() {
-
   }
 
   RemoveValue() {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:money_management/enums/buget_categories_enum.dart';
-import 'package:money_management/models/buget.dart';
+import 'package:money_management/models/budget.dart';
 import 'package:path_provider/path_provider.dart';
 import '../enums/category_enum.dart';
 import '../models/expense.dart';
@@ -10,7 +10,7 @@ import '../models/category.dart';
 class ExpenseDatabase extends ChangeNotifier {
   static late Isar isar;
   final List<Expense> _allExpenses = [];
-  final List<Category> _defaultCategorys = [
+  static final List<Category> _defaultCategorys = [
     Category(name: CategoryEnum.Housing, bugetCategory: BugetEnum.fixedCosts, imgPath: "Housing.png"),
     Category(name: CategoryEnum.Utilities, bugetCategory: BugetEnum.fixedCosts, imgPath: "Utilities.png"),
     Category(name: CategoryEnum.Transportation, bugetCategory: BugetEnum.fixedCosts, imgPath: "Transportation.png"),
@@ -30,14 +30,21 @@ class ExpenseDatabase extends ChangeNotifier {
 
   static Future<void> initialize() async {
     final dir = await getApplicationDocumentsDirectory();
-    isar = await Isar.open([ExpenseSchema, CategorySchema, BugetSchema], directory: dir.path);
+    isar = await Isar.open([ExpenseSchema, CategorySchema, BudgetSchema], directory: dir.path);
+    if (await isar.categorys.count() < 1) {
+      for (var category in _defaultCategorys) {
+         isar.writeTxnSync(() => isar.categorys.putSync(category));
+      }
+    } 
   }
 
   List<Expense> get allExpenses => _allExpenses;
   List<Category> get defaultCategorys => _defaultCategorys;
 
-  Future<void> createNewExpense(Expense expense) async {
-    await isar.writeTxn(() => isar.expenses.put(expense));
+  void createNewExpense(Expense expense) {
+    isar.writeTxnSync(() {
+      isar.expenses.putSync(expense);
+    });
   }
 
   Future<List<Expense>> getExpenses() async {
@@ -46,6 +53,9 @@ class ExpenseDatabase extends ChangeNotifier {
 
   Future<List<Expense>> getCurrentDayExpenses() async {
     var allList = await isar.expenses.where().findAll();
+    for (int i = 0; i < allList.length; i++) {
+      await allList[i].category.load();
+    } 
     return allList.where((_) => _.date.day == DateTime.now().day && _.date.month == DateTime.now().month && _.date.year == DateTime.now().year).toList();
   }
 
@@ -62,20 +72,33 @@ class ExpenseDatabase extends ChangeNotifier {
   }
 
   Future<List<Expense>> getExpensesBetweenDates(DateTime startDate, DateTime endDate) async {
-    var month = await isar.expenses.filter()
+    var monthExpenses = await isar.expenses.filter()
     .dateBetween(startDate, endDate)
     .sortByDateDesc()
     .findAll();
-    return month;
+    for (int i = 0; i < monthExpenses.length; i++) {
+      await monthExpenses[i].category.load();
+    } 
+    return monthExpenses;
   }
 
-  Future<Buget?> getBuget (int month, int year) async {
-    return await isar.bugets.filter().monthEqualTo(month).yearEqualTo(year).findFirst();
+  Future<Budget?> getBuget (int month, int year) async {
+    return await isar.budgets.filter().monthEqualTo(month).yearEqualTo(year).findFirst();
   }
 
-  Future<void> updateBuget (Buget buget) async {
+  Future<void> updateBuget (Budget buget) async {
       await isar.writeTxn(() async {
-        await isar.bugets.put(buget);
+        await isar.budgets.put(buget);
+    });
+  }
+
+  void deleteAllData() async{
+    await isar.writeTxn(() async {
+      var count = await isar.expenses
+      .filter()
+      .idLessThan(4000)
+      .deleteAll();
+      print('Deleted $count expenses');
     });
   }
   

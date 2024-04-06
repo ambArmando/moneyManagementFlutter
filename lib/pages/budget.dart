@@ -2,11 +2,12 @@
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:money_management/components/store.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/enums/buget_categories_enum.dart';
-import 'package:money_management/enums/category_enum.dart';
-import 'package:money_management/models/buget.dart';
+import 'package:money_management/models/budget.dart';
 import 'package:money_management/models/expense.dart';
+import 'package:provider/provider.dart';
 
 class BugetView extends StatefulWidget {
   const BugetView({super.key});
@@ -27,7 +28,7 @@ class BugetState extends State<BugetView> {
     BugetEnum.freeSpendings : 0,
   };
   List<BarChartGroupData> _barChartData = [];
-  late Buget? currentBuget;
+  late Budget? currentBuget;
 
   @override
   void initState() {
@@ -48,7 +49,7 @@ class BugetState extends State<BugetView> {
   void BuildBugetMap() {
     ClearBugetMap();
     for (var expense in selectedMonthExpenses) {
-      switch (GetExpenseBugetCategory(expense.category)){
+      switch (expense.category.value!.bugetCategory){
         case BugetEnum.fixedCosts:
           _bugetMap[BugetEnum.fixedCosts] = _bugetMap[BugetEnum.fixedCosts]! + expense.spendedValue;
           break;
@@ -82,7 +83,7 @@ class BugetState extends State<BugetView> {
           x: key.index,
           barRods: [
             BarChartRodData(
-              toY: value > GetBarRodMaxY(key) ? GetBarRodMaxY(key) : value,
+              toY: GetToYRodData(key, value),
               width: 45,
               borderRadius: BorderRadius.circular(4),
               color: GetRodColor(key),
@@ -96,6 +97,21 @@ class BugetState extends State<BugetView> {
         )
       );
     });
+  }
+
+  double GetToYRodData(BugetEnum key, double value) {
+    var storeModel = Provider.of<Store>(context, listen: false);
+    if (value > GetBarRodMaxY(key)) {
+      storeModel.isBudgetCategoryValueAboveLimitMap[key] = true;
+      storeModel.updateData(storeModel.isBudgetCategoryValueAboveLimitMap);
+      return GetBarRodMaxY(key);
+    } else {
+      if (storeModel.isBudgetCategoryValueAboveLimitMap.containsKey(key)) {
+        storeModel.isBudgetCategoryValueAboveLimitMap[key] = false;
+        storeModel.updateData(storeModel.isBudgetCategoryValueAboveLimitMap);
+      }
+      return value;
+    }
   }
 
   Color GetRodColor(BugetEnum bugetEnum) {
@@ -130,32 +146,6 @@ class BugetState extends State<BugetView> {
         return 10;
       case BugetEnum.investing:
         return 5;
-    }
-  }
-
-  BugetEnum GetExpenseBugetCategory(CategoryEnum expenseCategory) {
-    switch(expenseCategory){
-      case CategoryEnum.Housing:
-      case CategoryEnum.Utilities:
-      case CategoryEnum.Transportation:
-      case CategoryEnum.Groceries:
-        return BugetEnum.fixedCosts;
-      case CategoryEnum.Travel:
-      case CategoryEnum.Hobbies:
-      case CategoryEnum.Gifts:
-      case CategoryEnum.Shopping:
-      case CategoryEnum.DiningOut:
-        return BugetEnum.freeSpendings;
-      case CategoryEnum.EmergencyFund:
-      case CategoryEnum.ShortTermGoals:
-      case CategoryEnum.LongTermGoals:
-        return BugetEnum.savings;
-      case CategoryEnum.Education:
-      case CategoryEnum.StockMarket:
-      case CategoryEnum.Cryptocurrency:
-        return BugetEnum.investing;
-      default: 
-        return BugetEnum.freeSpendings;
     }
   }
 
@@ -275,7 +265,7 @@ class BugetState extends State<BugetView> {
           actions: [
             TextButton(onPressed: () {
               if (_bugetController.text.isNotEmpty) {
-                currentBuget ??= Buget(
+                currentBuget ??= Budget(
                   value: double.tryParse(_bugetController.text)!,
                   month: DateTime.now().month,
                   year: DateTime.now().year

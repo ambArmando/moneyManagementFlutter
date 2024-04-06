@@ -17,24 +17,18 @@ const ExpenseSchema = CollectionSchema(
   name: r'Expense',
   id: -4604318666888508206,
   properties: {
-    r'category': PropertySchema(
-      id: 0,
-      name: r'category',
-      type: IsarType.byte,
-      enumMap: _ExpensecategoryEnumValueMap,
-    ),
     r'date': PropertySchema(
-      id: 1,
+      id: 0,
       name: r'date',
       type: IsarType.dateTime,
     ),
     r'note': PropertySchema(
-      id: 2,
+      id: 1,
       name: r'note',
       type: IsarType.string,
     ),
     r'spendedValue': PropertySchema(
-      id: 3,
+      id: 2,
       name: r'spendedValue',
       type: IsarType.double,
     )
@@ -45,7 +39,14 @@ const ExpenseSchema = CollectionSchema(
   deserializeProp: _expenseDeserializeProp,
   idName: r'id',
   indexes: {},
-  links: {},
+  links: {
+    r'category': LinkSchema(
+      id: 6933751262338072598,
+      name: r'category',
+      target: r'Category',
+      single: true,
+    )
+  },
   embeddedSchemas: {},
   getId: _expenseGetId,
   getLinks: _expenseGetLinks,
@@ -74,10 +75,9 @@ void _expenseSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeByte(offsets[0], object.category.index);
-  writer.writeDateTime(offsets[1], object.date);
-  writer.writeString(offsets[2], object.note);
-  writer.writeDouble(offsets[3], object.spendedValue);
+  writer.writeDateTime(offsets[0], object.date);
+  writer.writeString(offsets[1], object.note);
+  writer.writeDouble(offsets[2], object.spendedValue);
 }
 
 Expense _expenseDeserialize(
@@ -87,11 +87,9 @@ Expense _expenseDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Expense(
-    category: _ExpensecategoryValueEnumMap[reader.readByteOrNull(offsets[0])] ??
-        CategoryEnum.Housing,
-    date: reader.readDateTime(offsets[1]),
-    note: reader.readStringOrNull(offsets[2]),
-    spendedValue: reader.readDouble(offsets[3]),
+    date: reader.readDateTime(offsets[0]),
+    note: reader.readStringOrNull(offsets[1]),
+    spendedValue: reader.readDouble(offsets[2]),
   );
   object.id = id;
   return object;
@@ -105,64 +103,27 @@ P _expenseDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (_ExpensecategoryValueEnumMap[reader.readByteOrNull(offset)] ??
-          CategoryEnum.Housing) as P;
-    case 1:
       return (reader.readDateTime(offset)) as P;
-    case 2:
+    case 1:
       return (reader.readStringOrNull(offset)) as P;
-    case 3:
+    case 2:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
-const _ExpensecategoryEnumValueMap = {
-  'Housing': 0,
-  'Utilities': 1,
-  'Transportation': 2,
-  'Groceries': 3,
-  'EmergencyFund': 4,
-  'ShortTermGoals': 5,
-  'LongTermGoals': 6,
-  'Education': 7,
-  'StockMarket': 8,
-  'Cryptocurrency': 9,
-  'Travel': 10,
-  'Hobbies': 11,
-  'Gifts': 12,
-  'Shopping': 13,
-  'DiningOut': 14,
-};
-const _ExpensecategoryValueEnumMap = {
-  0: CategoryEnum.Housing,
-  1: CategoryEnum.Utilities,
-  2: CategoryEnum.Transportation,
-  3: CategoryEnum.Groceries,
-  4: CategoryEnum.EmergencyFund,
-  5: CategoryEnum.ShortTermGoals,
-  6: CategoryEnum.LongTermGoals,
-  7: CategoryEnum.Education,
-  8: CategoryEnum.StockMarket,
-  9: CategoryEnum.Cryptocurrency,
-  10: CategoryEnum.Travel,
-  11: CategoryEnum.Hobbies,
-  12: CategoryEnum.Gifts,
-  13: CategoryEnum.Shopping,
-  14: CategoryEnum.DiningOut,
-};
-
 Id _expenseGetId(Expense object) {
   return object.id;
 }
 
 List<IsarLinkBase<dynamic>> _expenseGetLinks(Expense object) {
-  return [];
+  return [object.category];
 }
 
 void _expenseAttach(IsarCollection<dynamic> col, Id id, Expense object) {
   object.id = id;
+  object.category.attach(col, col.isar.collection<Category>(), r'category', id);
 }
 
 extension ExpenseQueryWhereSort on QueryBuilder<Expense, Expense, QWhere> {
@@ -242,59 +203,6 @@ extension ExpenseQueryWhere on QueryBuilder<Expense, Expense, QWhereClause> {
 
 extension ExpenseQueryFilter
     on QueryBuilder<Expense, Expense, QFilterCondition> {
-  QueryBuilder<Expense, Expense, QAfterFilterCondition> categoryEqualTo(
-      CategoryEnum value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'category',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Expense, Expense, QAfterFilterCondition> categoryGreaterThan(
-    CategoryEnum value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'category',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Expense, Expense, QAfterFilterCondition> categoryLessThan(
-    CategoryEnum value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'category',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Expense, Expense, QAfterFilterCondition> categoryBetween(
-    CategoryEnum lower,
-    CategoryEnum upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'category',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
   QueryBuilder<Expense, Expense, QAfterFilterCondition> dateEqualTo(
       DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -613,21 +521,22 @@ extension ExpenseQueryObject
     on QueryBuilder<Expense, Expense, QFilterCondition> {}
 
 extension ExpenseQueryLinks
-    on QueryBuilder<Expense, Expense, QFilterCondition> {}
+    on QueryBuilder<Expense, Expense, QFilterCondition> {
+  QueryBuilder<Expense, Expense, QAfterFilterCondition> category(
+      FilterQuery<Category> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.link(q, r'category');
+    });
+  }
+
+  QueryBuilder<Expense, Expense, QAfterFilterCondition> categoryIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.linkLength(r'category', 0, true, 0, true);
+    });
+  }
+}
 
 extension ExpenseQuerySortBy on QueryBuilder<Expense, Expense, QSortBy> {
-  QueryBuilder<Expense, Expense, QAfterSortBy> sortByCategory() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'category', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Expense, Expense, QAfterSortBy> sortByCategoryDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'category', Sort.desc);
-    });
-  }
-
   QueryBuilder<Expense, Expense, QAfterSortBy> sortByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.asc);
@@ -667,18 +576,6 @@ extension ExpenseQuerySortBy on QueryBuilder<Expense, Expense, QSortBy> {
 
 extension ExpenseQuerySortThenBy
     on QueryBuilder<Expense, Expense, QSortThenBy> {
-  QueryBuilder<Expense, Expense, QAfterSortBy> thenByCategory() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'category', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Expense, Expense, QAfterSortBy> thenByCategoryDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'category', Sort.desc);
-    });
-  }
-
   QueryBuilder<Expense, Expense, QAfterSortBy> thenByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.asc);
@@ -730,12 +627,6 @@ extension ExpenseQuerySortThenBy
 
 extension ExpenseQueryWhereDistinct
     on QueryBuilder<Expense, Expense, QDistinct> {
-  QueryBuilder<Expense, Expense, QDistinct> distinctByCategory() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'category');
-    });
-  }
-
   QueryBuilder<Expense, Expense, QDistinct> distinctByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'date');
@@ -761,12 +652,6 @@ extension ExpenseQueryProperty
   QueryBuilder<Expense, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
-    });
-  }
-
-  QueryBuilder<Expense, CategoryEnum, QQueryOperations> categoryProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'category');
     });
   }
 

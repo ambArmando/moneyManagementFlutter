@@ -52,12 +52,12 @@ class StatisticsState extends State<Statistics> {
   void BuildExpensesMap() {
     _expensesMap.clear();
     for (var expense in _currentDatesExpenses) {
-      if (_expensesMap.containsKey(expense.category)) {
-        _expensesMap[expense.category] = _expensesMap[expense.category]! + expense.spendedValue;
+      if (_expensesMap.containsKey(expense.category.value!.name)) {
+        _expensesMap[expense.category.value!.name] = _expensesMap[expense.category.value!.name]! + expense.spendedValue;
       }
       else 
       {
-        _expensesMap[expense.category] = expense.spendedValue;
+        _expensesMap[expense.category.value!.name] = expense.spendedValue;
       }
     }
   }
@@ -123,7 +123,7 @@ class StatisticsState extends State<Statistics> {
       future: _initFuture,
       builder: (context, snaphot) {
         if (snaphot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
+          return const Center(child: CircularProgressIndicator());
         } else if (snaphot.hasError) {
           return const Center(child: Text("Error occured"),);
         }
@@ -313,13 +313,13 @@ class StatisticsState extends State<Statistics> {
       return;
     }
     var keysIndex = _expensesMap.keys.toList();
-    _currentDatesExpensesCopy = _currentDatesExpenses.where((element) => keysIndex.elementAt(touchedIndex) == element.category).toList();
+    _currentDatesExpensesCopy = _currentDatesExpenses.where((element) => keysIndex.elementAt(touchedIndex) == element.category.value!.name).toList();
   }
 
   void SetStateAfterDeleteExpense(int index) {
     setState(() {
       for (int i = 0; i < _pieData.length; i++) {
-        if (_pieData[i].title == _currentDatesExpenses[index].category.name) {
+        if (_pieData[i].title == _currentDatesExpenses[index].category.value!.name) {
           _pieData[i] = _pieData[i].copyWith(value: _pieData[i].value - _currentDatesExpenses[index].spendedValue,
           color: _pieData[i].color,); 
           break;
@@ -338,7 +338,7 @@ class StatisticsState extends State<Statistics> {
       }
       if (_currentDatesExpensesCopy.length == 1) {
         var selectedCategory = popup.getExpense!.category;
-        touchedIndex = _expensesMap.keys.toList().indexOf(selectedCategory);
+        touchedIndex = _expensesMap.keys.toList().indexOf(selectedCategory.value!.name);
       }
       setState(() {
         BuildExpensesMap();

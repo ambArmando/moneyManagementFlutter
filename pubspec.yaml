@@ -34,6 +34,7 @@ dependencies:
     sdk: flutter
   isar: *isar_version
   path_provider: ^2.1.2
+  provider: 6.1.2
   carbon_icons: ^0.0.1+2
   isar_flutter_libs: *isar_version # contains Isar Core
   # The following adds the Cupertino Icons font to your application.

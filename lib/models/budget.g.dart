@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'buget.dart';
+part of 'budget.dart';
 
 // **************************************************************************
 // IsarCollectionGenerator
@@ -9,13 +9,13 @@ part of 'buget.dart';
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
-extension GetBugetCollection on Isar {
-  IsarCollection<Buget> get bugets => this.collection();
+extension GetBudgetCollection on Isar {
+  IsarCollection<Budget> get budgets => this.collection();
 }
 
-const BugetSchema = CollectionSchema(
-  name: r'Buget',
-  id: 5603550619710107677,
+const BudgetSchema = CollectionSchema(
+  name: r'Budget',
+  id: -3383598594604670326,
   properties: {
     r'month': PropertySchema(
       id: 0,
@@ -33,22 +33,22 @@ const BugetSchema = CollectionSchema(
       type: IsarType.long,
     )
   },
-  estimateSize: _bugetEstimateSize,
-  serialize: _bugetSerialize,
-  deserialize: _bugetDeserialize,
-  deserializeProp: _bugetDeserializeProp,
+  estimateSize: _budgetEstimateSize,
+  serialize: _budgetSerialize,
+  deserialize: _budgetDeserialize,
+  deserializeProp: _budgetDeserializeProp,
   idName: r'id',
   indexes: {},
   links: {},
   embeddedSchemas: {},
-  getId: _bugetGetId,
-  getLinks: _bugetGetLinks,
-  attach: _bugetAttach,
+  getId: _budgetGetId,
+  getLinks: _budgetGetLinks,
+  attach: _budgetAttach,
   version: '3.1.0',
 );
 
-int _bugetEstimateSize(
-  Buget object,
+int _budgetEstimateSize(
+  Budget object,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
@@ -56,8 +56,8 @@ int _bugetEstimateSize(
   return bytesCount;
 }
 
-void _bugetSerialize(
-  Buget object,
+void _budgetSerialize(
+  Budget object,
   IsarWriter writer,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
@@ -67,13 +67,13 @@ void _bugetSerialize(
   writer.writeLong(offsets[2], object.year);
 }
 
-Buget _bugetDeserialize(
+Budget _budgetDeserialize(
   Id id,
   IsarReader reader,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Buget(
+  final object = Budget(
     month: reader.readLong(offsets[0]),
     value: reader.readDouble(offsets[1]),
     year: reader.readLong(offsets[2]),
@@ -82,7 +82,7 @@ Buget _bugetDeserialize(
   return object;
 }
 
-P _bugetDeserializeProp<P>(
+P _budgetDeserializeProp<P>(
   IsarReader reader,
   int propertyId,
   int offset,
@@ -100,28 +100,28 @@ P _bugetDeserializeProp<P>(
   }
 }
 
-Id _bugetGetId(Buget object) {
+Id _budgetGetId(Budget object) {
   return object.id;
 }
 
-List<IsarLinkBase<dynamic>> _bugetGetLinks(Buget object) {
+List<IsarLinkBase<dynamic>> _budgetGetLinks(Budget object) {
   return [];
 }
 
-void _bugetAttach(IsarCollection<dynamic> col, Id id, Buget object) {
+void _budgetAttach(IsarCollection<dynamic> col, Id id, Budget object) {
   object.id = id;
 }
 
-extension BugetQueryWhereSort on QueryBuilder<Buget, Buget, QWhere> {
-  QueryBuilder<Buget, Buget, QAfterWhere> anyId() {
+extension BudgetQueryWhereSort on QueryBuilder<Budget, Budget, QWhere> {
+  QueryBuilder<Budget, Budget, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension BugetQueryWhere on QueryBuilder<Buget, Buget, QWhereClause> {
-  QueryBuilder<Buget, Buget, QAfterWhereClause> idEqualTo(Id id) {
+extension BudgetQueryWhere on QueryBuilder<Budget, Budget, QWhereClause> {
+  QueryBuilder<Budget, Budget, QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IdWhereClause.between(
         lower: id,
@@ -130,7 +130,7 @@ extension BugetQueryWhere on QueryBuilder<Buget, Buget, QWhereClause> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterWhereClause> idNotEqualTo(Id id) {
+  QueryBuilder<Budget, Budget, QAfterWhereClause> idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -152,7 +152,7 @@ extension BugetQueryWhere on QueryBuilder<Buget, Buget, QWhereClause> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterWhereClause> idGreaterThan(Id id,
+  QueryBuilder<Budget, Budget, QAfterWhereClause> idGreaterThan(Id id,
       {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
@@ -161,7 +161,7 @@ extension BugetQueryWhere on QueryBuilder<Buget, Buget, QWhereClause> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterWhereClause> idLessThan(Id id,
+  QueryBuilder<Budget, Budget, QAfterWhereClause> idLessThan(Id id,
       {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
@@ -170,7 +170,7 @@ extension BugetQueryWhere on QueryBuilder<Buget, Buget, QWhereClause> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterWhereClause> idBetween(
+  QueryBuilder<Budget, Budget, QAfterWhereClause> idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
@@ -187,8 +187,8 @@ extension BugetQueryWhere on QueryBuilder<Buget, Buget, QWhereClause> {
   }
 }
 
-extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> idEqualTo(Id value) {
+extension BudgetQueryFilter on QueryBuilder<Budget, Budget, QFilterCondition> {
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'id',
@@ -197,7 +197,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> idGreaterThan(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> idGreaterThan(
     Id value, {
     bool include = false,
   }) {
@@ -210,7 +210,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> idLessThan(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> idLessThan(
     Id value, {
     bool include = false,
   }) {
@@ -223,7 +223,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> idBetween(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
@@ -240,7 +240,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> monthEqualTo(int value) {
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> monthEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'month',
@@ -249,7 +249,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> monthGreaterThan(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> monthGreaterThan(
     int value, {
     bool include = false,
   }) {
@@ -262,7 +262,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> monthLessThan(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> monthLessThan(
     int value, {
     bool include = false,
   }) {
@@ -275,7 +275,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> monthBetween(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> monthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -292,7 +292,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> valueEqualTo(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> valueEqualTo(
     double value, {
     double epsilon = Query.epsilon,
   }) {
@@ -305,7 +305,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> valueGreaterThan(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> valueGreaterThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
@@ -320,7 +320,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> valueLessThan(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> valueLessThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
@@ -335,7 +335,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> valueBetween(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> valueBetween(
     double lower,
     double upper, {
     bool includeLower = true,
@@ -354,7 +354,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> yearEqualTo(int value) {
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> yearEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'year',
@@ -363,7 +363,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> yearGreaterThan(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> yearGreaterThan(
     int value, {
     bool include = false,
   }) {
@@ -376,7 +376,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> yearLessThan(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> yearLessThan(
     int value, {
     bool include = false,
   }) {
@@ -389,7 +389,7 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterFilterCondition> yearBetween(
+  QueryBuilder<Budget, Budget, QAfterFilterCondition> yearBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -407,138 +407,138 @@ extension BugetQueryFilter on QueryBuilder<Buget, Buget, QFilterCondition> {
   }
 }
 
-extension BugetQueryObject on QueryBuilder<Buget, Buget, QFilterCondition> {}
+extension BudgetQueryObject on QueryBuilder<Budget, Budget, QFilterCondition> {}
 
-extension BugetQueryLinks on QueryBuilder<Buget, Buget, QFilterCondition> {}
+extension BudgetQueryLinks on QueryBuilder<Budget, Budget, QFilterCondition> {}
 
-extension BugetQuerySortBy on QueryBuilder<Buget, Buget, QSortBy> {
-  QueryBuilder<Buget, Buget, QAfterSortBy> sortByMonth() {
+extension BudgetQuerySortBy on QueryBuilder<Budget, Budget, QSortBy> {
+  QueryBuilder<Budget, Budget, QAfterSortBy> sortByMonth() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'month', Sort.asc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> sortByMonthDesc() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> sortByMonthDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'month', Sort.desc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> sortByValue() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> sortByValue() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'value', Sort.asc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> sortByValueDesc() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> sortByValueDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'value', Sort.desc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> sortByYear() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> sortByYear() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'year', Sort.asc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> sortByYearDesc() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> sortByYearDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'year', Sort.desc);
     });
   }
 }
 
-extension BugetQuerySortThenBy on QueryBuilder<Buget, Buget, QSortThenBy> {
-  QueryBuilder<Buget, Buget, QAfterSortBy> thenById() {
+extension BudgetQuerySortThenBy on QueryBuilder<Budget, Budget, QSortThenBy> {
+  QueryBuilder<Budget, Budget, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> thenByIdDesc() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> thenByMonth() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> thenByMonth() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'month', Sort.asc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> thenByMonthDesc() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> thenByMonthDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'month', Sort.desc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> thenByValue() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> thenByValue() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'value', Sort.asc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> thenByValueDesc() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> thenByValueDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'value', Sort.desc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> thenByYear() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> thenByYear() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'year', Sort.asc);
     });
   }
 
-  QueryBuilder<Buget, Buget, QAfterSortBy> thenByYearDesc() {
+  QueryBuilder<Budget, Budget, QAfterSortBy> thenByYearDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'year', Sort.desc);
     });
   }
 }
 
-extension BugetQueryWhereDistinct on QueryBuilder<Buget, Buget, QDistinct> {
-  QueryBuilder<Buget, Buget, QDistinct> distinctByMonth() {
+extension BudgetQueryWhereDistinct on QueryBuilder<Budget, Budget, QDistinct> {
+  QueryBuilder<Budget, Budget, QDistinct> distinctByMonth() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'month');
     });
   }
 
-  QueryBuilder<Buget, Buget, QDistinct> distinctByValue() {
+  QueryBuilder<Budget, Budget, QDistinct> distinctByValue() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'value');
     });
   }
 
-  QueryBuilder<Buget, Buget, QDistinct> distinctByYear() {
+  QueryBuilder<Budget, Budget, QDistinct> distinctByYear() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'year');
     });
   }
 }
 
-extension BugetQueryProperty on QueryBuilder<Buget, Buget, QQueryProperty> {
-  QueryBuilder<Buget, int, QQueryOperations> idProperty() {
+extension BudgetQueryProperty on QueryBuilder<Budget, Budget, QQueryProperty> {
+  QueryBuilder<Budget, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
     });
   }
 
-  QueryBuilder<Buget, int, QQueryOperations> monthProperty() {
+  QueryBuilder<Budget, int, QQueryOperations> monthProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'month');
     });
   }
 
-  QueryBuilder<Buget, double, QQueryOperations> valueProperty() {
+  QueryBuilder<Budget, double, QQueryOperations> valueProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'value');
     });
   }
 
-  QueryBuilder<Buget, int, QQueryOperations> yearProperty() {
+  QueryBuilder<Budget, int, QQueryOperations> yearProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'year');
     });

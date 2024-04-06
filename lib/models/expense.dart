@@ -1,7 +1,7 @@
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:isar/isar.dart';
-import 'package:money_management/enums/category_enum.dart';
 import 'package:money_management/models/category.dart';
 
 part 'expense.g.dart';
@@ -12,18 +12,28 @@ class Expense {
   
   double spendedValue;
 
-  @enumerated
-  CategoryEnum category;
+  final category = IsarLink<Category>();
 
   DateTime date;
 
   String? note;
 
+  @override
+  bool operator ==(Object other) =>
+      other is Expense &&
+      other.runtimeType == runtimeType &&
+      other.category.value == category.value;
+
+  @override
+  int get hashCode => category.value.hashCode;
+
   Expense({
     required this.spendedValue,
-    required this.category,
+    Category? category,
     required this.date,
     required this.note,
-  }) ;
+  }) {
+    this.category.value = category;
+  }
 }
 

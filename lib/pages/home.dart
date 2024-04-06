@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:money_management/pages/buget.dart';
+import 'package:money_management/pages/budget.dart';
 import 'package:money_management/pages/home_page.dart';
 import 'package:money_management/pages/statistics.dart';
 

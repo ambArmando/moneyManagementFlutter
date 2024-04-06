@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:money_management/components/store.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/pages/home.dart';
-import 'pages/home_page.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ExpenseDatabase.initialize();
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => Store(),
+      child: const MyApp()
+    )
+  );
 }
 
 class MyApp extends StatelessWidget {

@@ -1,9 +1,9 @@
 import 'package:isar/isar.dart';
 
-part 'buget.g.dart';
+part 'budget.g.dart';
 
 @Collection()
-class Buget {
+class Budget {
   Id id = Isar.autoIncrement;
   
   double value;
@@ -12,7 +12,7 @@ class Buget {
 
   int year;
 
-  Buget({
+  Budget({
     required this.value,
     required this.month,
     required this.year,
