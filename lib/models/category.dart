@@ -18,6 +18,17 @@ class Category {
 
   final String? imgPath;
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Category &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          id == other.id;
+
+  @override
+  int get hashCode => name.hashCode ^ id.hashCode;
+
   Category({
     required this.name,
     required this.bugetCategory,

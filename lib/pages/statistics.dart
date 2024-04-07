@@ -39,7 +39,7 @@ class StatisticsState extends State<Statistics> {
     _currentDatesExpensesCopy = List.from(_currentDatesExpenses);
     totalSpendingsBetweenDates = CurrentDaySpendings();
     BuildExpensesMap();
-    PopulateChart();
+    UpdatePieChartWithExpensesData();
   }
 
   String CurrentDaySpendings() {
@@ -62,7 +62,7 @@ class StatisticsState extends State<Statistics> {
     }
   }
 
-  void PopulateChart() {
+  void UpdatePieChartWithExpensesData() {
     _pieData.clear();
     var expensesMapKeys = _expensesMap.keys.toList();
     _expensesMap.forEach((key, value) {
@@ -233,8 +233,7 @@ class StatisticsState extends State<Statistics> {
                                     }
                                     else {
                                       touchedIndex = pieTouchResponse?.touchedSection!.touchedSectionIndex;
-                                      BuildExpensesMap();
-                                      PopulateChart();
+                                      UpdatePieChartWithExpensesData();
                                       FilterExpensesOnPieChartTouch(touchedIndex);
                                     }
                                   });
@@ -293,15 +292,26 @@ class StatisticsState extends State<Statistics> {
     if (_currentDatesExpensesCopy.contains(_currentDatesExpensesCopy[index])) {
       localDb.deleteExpense(_currentDatesExpensesCopy[index].id);
     } 
+    var deletedExpense = _currentDatesExpensesCopy[index];
     _currentDatesExpenses.remove(_currentDatesExpensesCopy[index]);
     _currentDatesExpensesCopy.removeAt(index);
-    if (_currentDatesExpensesCopy.isEmpty) {
-      touchedIndex = -1;
+    _expensesMap[deletedExpense.category.value!.name] = _expensesMap[deletedExpense.category.value!.name]! - deletedExpense.spendedValue;
+    
+    var keysToBeRemoved = [];
+    for (var key in _expensesMap.keys) {
+      if (_expensesMap[key]! == 0) {
+        keysToBeRemoved.add(key);
+      }
     }
-    setState(() {
-      BuildExpensesMap();
-      PopulateChart();
-      FilterExpensesOnPieChartTouch(touchedIndex);
+    for (var key in keysToBeRemoved) {
+      _expensesMap.remove(key);
+    }
+    if (_currentDatesExpensesCopy.isNotEmpty && touchedIndex != -1){
+      touchedIndex = _expensesMap.keys.toList().indexOf(deletedExpense.category.value!.name);
+    }
+    UpdatePieChartWithExpensesData();
+    FilterExpensesOnPieChartTouch(touchedIndex);
+    setState(() { 
       totalSpendingsBetweenDates = CurrentDaySpendings();
     });
   }
@@ -342,7 +352,7 @@ class StatisticsState extends State<Statistics> {
       }
       setState(() {
         BuildExpensesMap();
-        PopulateChart();
+        UpdatePieChartWithExpensesData();
         FilterExpensesOnPieChartTouch(touchedIndex);
         totalSpendingsBetweenDates = CurrentDaySpendings();
       }); 
@@ -367,7 +377,7 @@ class StatisticsState extends State<Statistics> {
           _currentDatesExpensesCopy = List.from(_currentDatesExpenses);
           setState(() {
             BuildExpensesMap();
-            PopulateChart();
+            UpdatePieChartWithExpensesData();
             totalSpendingsBetweenDates = CurrentDaySpendings();
           });
         },

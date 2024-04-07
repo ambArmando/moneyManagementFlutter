@@ -105,7 +105,8 @@ class BugetState extends State<BugetView> {
       storeModel.isBudgetCategoryValueAboveLimitMap[key] = true;
       storeModel.updateData(storeModel.isBudgetCategoryValueAboveLimitMap);
       return GetBarRodMaxY(key);
-    } else {
+    } 
+    else {
       if (storeModel.isBudgetCategoryValueAboveLimitMap.containsKey(key)) {
         storeModel.isBudgetCategoryValueAboveLimitMap[key] = false;
         storeModel.updateData(storeModel.isBudgetCategoryValueAboveLimitMap);

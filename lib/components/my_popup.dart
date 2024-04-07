@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:money_management/database/expense_database.dart';
@@ -29,15 +31,14 @@ class MyPopupState extends State<MyPopup>{
   late ExpenseDatabase _localDb;
   DateTime? selectedDate = DateTime.now();
   Category? selectedCategory;
-  Expense? _expense;
+  Set<Category> _defaultCategories = {};
   
   @override
   void initState() {
     super.initState();
     _title = widget.title;
     _localDb = widget.localDb;
-    _expense = widget.expense;
-
+    LoadDefaultCategories();
     if (widget.expense != null) {
       _spendedValueController.text = widget.expense!.spendedValue.toString();
       _noteController.text = widget.expense!.note.toString();
@@ -66,8 +67,8 @@ class MyPopupState extends State<MyPopup>{
                   DropdownButton<Category>(
                     hint: const Text("Select category"),
                     isExpanded: true,
-                    value: null,
-                    items:  _localDb.defaultCategorys.map((category) {
+                    value: selectedCategory,
+                    items: _defaultCategories!.map((category) {
                       return DropdownMenuItem(
                         value: category,
                         child: Text(category.name.name));
@@ -158,5 +159,12 @@ class MyPopupState extends State<MyPopup>{
       },
       child: const Text("Save"),
     );
+  }
+  
+  void LoadDefaultCategories() async{
+    var query = await _localDb.getCategories();
+    setState(() {
+      _defaultCategories = query.toSet();
+    });
   }
 }

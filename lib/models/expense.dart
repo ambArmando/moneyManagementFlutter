@@ -18,15 +18,6 @@ class Expense {
 
   String? note;
 
-  @override
-  bool operator ==(Object other) =>
-      other is Expense &&
-      other.runtimeType == runtimeType &&
-      other.category.value == category.value;
-
-  @override
-  int get hashCode => category.value.hashCode;
-
   Expense({
     required this.spendedValue,
     Category? category,

@@ -1,5 +1,4 @@
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:money_management/components/my_list_tile.dart';
 import 'package:money_management/components/my_popup.dart';
@@ -21,26 +20,18 @@ class HomePage extends StatefulWidget{
 
 class HomePageState extends State<HomePage> {
   int? selectedCategoryIndex;
+  String displayedValue = "";
+  bool isLoading = true;
+  late String totalDaySpendings;
+  late Budget? setBudget;
   ExpenseDatabase localDb = ExpenseDatabase();
   List<Expense> currentDayExpenses = [];
-  List<Expense> monthExpenses = [];
+  List<Expense> currentMonthExpenses = [];
+  Map<BugetEnum, double> _expenseCategoryTotalsMap = {};
   TextEditingController spendedValueController = TextEditingController();
   TextEditingController noteController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  String displayedValue = "";
-  String? totalDaySpendings;
-  bool isLoading = true;
-  late Budget? setBudget;
-  Map<BugetEnum, double> _categoriesTotal = {
-    BugetEnum.fixedCosts : 0,
-    BugetEnum.savings : 0,
-    BugetEnum.investing : 0,
-    BugetEnum.freeSpendings : 0,
-  };
-  DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
-  DateTime endDate = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
+  ScrollController _scrollController = ScrollController();
 
- //figure a way to call the current day expenses only when the app is opened for the first time
   @override
   void initState() {
     super.initState();
@@ -49,23 +40,16 @@ class HomePageState extends State<HomePage> {
   }
 
   void LoadExpenses() async {
-    //var expenses = await localDb.getCurrentDayExpenses();
-    monthExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
-    var expenses = monthExpenses.where((element) => element.date.day == DateTime.now().day && element.date.month == DateTime.now().month && element.date.year == DateTime.now().year).toList();
+    var startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
+    var endDate = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
     setBudget = await localDb.getBuget(DateTime.now().month, DateTime.now().year);
-    BuildCategoriesTotal();
-    totalDaySpendings = expenses.isNotEmpty ? expenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString() : "0";
+    currentMonthExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
+    currentDayExpenses = currentMonthExpenses.where((element) => element.date.day == DateTime.now().day && element.date.month == DateTime.now().month && element.date.year == DateTime.now().year).toList();
+    CalculateCategoryTotals();
+    totalDaySpendings = CalculateCurrentDaySpendingsTotal();
     setState((){
-      currentDayExpenses = expenses;
       isLoading = false;
     });
-  }
-
-  BuildCategoriesTotal() {
-    CategoriesTotalReset();
-    for (var expense in monthExpenses) {
-      _categoriesTotal[expense.category.value!.bugetCategory] = _categoriesTotal[expense.category.value!.bugetCategory]! + expense.spendedValue;
-    }
   }
 
   @override
@@ -135,7 +119,7 @@ class HomePageState extends State<HomePage> {
                               top: 0,
                               right: 2,
                               child: Visibility(
-                                visible: (setBudget?.value ?? 0) > 0 && (isBudgetAboveLimit(store, localDb.defaultCategorys[index]) || isBudgetAboveLimitHomePage(localDb.defaultCategorys[index])),
+                                visible: (setBudget?.value ?? 0) > 0 && (IsBudgetAboveLimit(store, localDb.defaultCategorys[index])),
                                 child: Icon(Icons.warning_amber_rounded, color: Colors.red[600], size: 22,))
                             ),
                             Positioned(
@@ -245,36 +229,126 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  bool isBudgetAboveLimit(Store store, Category category) {
+  bool IsBudgetAboveLimit(Store store, Category category) {
+    if (_expenseCategoryTotalsMap.containsKey(category.bugetCategory)) { 
+      return _expenseCategoryTotalsMap[category.bugetCategory]! > CalculateMaxBudget(category.bugetCategory);
+    }
     if (store.isBudgetCategoryValueAboveLimitMap.containsKey(category.bugetCategory)) {
       return store.isBudgetCategoryValueAboveLimitMap[category.bugetCategory] ?? false;
     }
     return false;
   }
 
-  bool isBudgetAboveLimitHomePage(Category category) {
-    print("category = ${category.name}");
-    print("${category.bugetCategory} ${_categoriesTotal[category.bugetCategory]}");
-    print("${GetMaxBudget(category.bugetCategory)}");
-    return _categoriesTotal[category.bugetCategory]! > GetMaxBudget(category.bugetCategory);
+  void NewExpenseFromPopup(BuildContext context) {
+    var popup = MyPopup(
+      title: "New expense",
+      localDb: localDb,
+    );
+    showDialog (
+      context: context,
+      builder: (context) => popup
+    ).then((value) {
+      if (popup.getExpense != null && popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) {
+        currentDayExpenses.add(popup.getExpense!);
+      }
+      currentMonthExpenses.add(popup.getExpense!);
+      _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory] = _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory]! + popup.getExpense!.spendedValue;
+      displayedValue = "";
+      spendedValueController.clear();
+      noteController.clear();
+      setState(() {
+        totalDaySpendings = CalculateCurrentDaySpendingsTotal();
+      });
+    });
   }
 
-  CategoriesTotalReset () {
-    _categoriesTotal = {
-      BugetEnum.fixedCosts : 0,
-      BugetEnum.savings : 0,
-      BugetEnum.investing : 0,
-      BugetEnum.freeSpendings : 0,
-    };
-  } 
-
-  double GetMaxBudget(BugetEnum bugetEnum) {
-    if (setBudget == null) {
-      return 0;
+  AddNewExpense() {
+    if (displayedValue.isEmpty) {
+      return;
     }
-    var percentage = GetPercentage(bugetEnum);
+    var now = DateTime.now();
+    selectedCategoryIndex ??= 0;
+    Expense expense = Expense(
+      spendedValue: double.parse(displayedValue),
+      category: localDb.defaultCategorys[selectedCategoryIndex!],
+      date: DateTime(now.year, now.month, now.day),
+      note: ""
+    );
+    localDb.createNewExpense(expense);
+    currentDayExpenses.add(expense);
+    currentMonthExpenses.add(expense);
+    if (_expenseCategoryTotalsMap.containsKey(expense.category.value!.bugetCategory)) {
+      _expenseCategoryTotalsMap[expense.category.value!.bugetCategory] = _expenseCategoryTotalsMap[expense.category.value!.bugetCategory]! + expense.spendedValue;
+    }
+    else
+    {
+      _expenseCategoryTotalsMap[expense.category.value!.bugetCategory] = expense.spendedValue;
+    }
+    displayedValue = "";
+    setState(() {
+      totalDaySpendings = CalculateCurrentDaySpendingsTotal();
+    });
+    _scrollController.animateTo(
+      _scrollController.position.viewportDimension,
+      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 500),
+   );
+  }
 
-    return (setBudget!.value * percentage) / 100;
+  EditExpense(int index) {
+    _expenseCategoryTotalsMap[currentDayExpenses[index].category.value!.bugetCategory] = _expenseCategoryTotalsMap[currentDayExpenses[index].category.value!.bugetCategory]! - currentDayExpenses[index].spendedValue;
+    var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: currentDayExpenses[index],);
+    showDialog (context: context, builder: (context) => popup)
+    .then((value) {
+      if (popup.getExpense!.date.day != DateTime.now().day && popup.getExpense!.date.month != DateTime.now().month && popup.getExpense!.date.year != DateTime.now().year) {
+        currentMonthExpenses.remove(currentDayExpenses[index]);
+        currentDayExpenses.removeAt(index);
+      }  
+      _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory] = _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory]! + popup.getExpense!.spendedValue;
+      setState(() {
+        totalDaySpendings = CalculateCurrentDaySpendingsTotal();
+      });
+    spendedValueController.clear();
+    noteController.clear();
+    });
+  }
+
+  DeleteExpense(int index) {
+    var deletedExpense = currentDayExpenses[index];
+    localDb.deleteExpense(deletedExpense.id);
+    currentMonthExpenses.remove(deletedExpense);
+    currentDayExpenses.removeAt(index);
+    _expenseCategoryTotalsMap[deletedExpense.category.value!.bugetCategory] = _expenseCategoryTotalsMap[deletedExpense.category.value!.bugetCategory]! - deletedExpense.spendedValue;
+    setState(() {
+      totalDaySpendings = CalculateCurrentDaySpendingsTotal();
+    });
+  }
+
+  CalculateCategoryTotals() {
+    if (currentMonthExpenses.isEmpty) {
+      for (var budget in BugetEnum.values) {
+        _expenseCategoryTotalsMap[budget] = 0;
+      }
+    }
+
+    for (var expense in currentMonthExpenses) {
+      var bugetCategory = expense.category.value!.bugetCategory;
+      if (!_expenseCategoryTotalsMap.containsKey(bugetCategory)) {
+        _expenseCategoryTotalsMap[bugetCategory] = expense.spendedValue;
+      }
+      else 
+      {
+        _expenseCategoryTotalsMap[bugetCategory] = _expenseCategoryTotalsMap[bugetCategory]! + expense.spendedValue;
+      }
+    }
+  }
+
+  String CalculateCurrentDaySpendingsTotal() {
+    return currentDayExpenses.isNotEmpty ? currentDayExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString() : "0";
+  }
+
+  double CalculateMaxBudget(BugetEnum bugetEnum) {
+    return setBudget == null ? 0 : (setBudget!.value * GetPercentage(bugetEnum)) / 100;
   }
 
   int GetPercentage(BugetEnum bugetEnum) {
@@ -288,98 +362,6 @@ class HomePageState extends State<HomePage> {
       case BugetEnum.investing:
         return 5;
     }
-  }
-
-  void NewExpenseFromPopup(BuildContext context) {
-    var popup = MyPopup(
-          title: "New expense",
-          localDb: localDb,
-        );
-    showDialog (
-      context: context,
-       builder: (context) => popup
-    ).then((value) {
-      if (popup.getExpense != null && popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) {
-        setState(() {
-          currentDayExpenses.add(popup.getExpense!);
-          totalDaySpendings = CurrentDaySpendings();
-        });
-      }
-      spendedValueController.clear();
-      noteController.clear();
-    });
-  }
-
-  DeleteExpense(int index) {
-    var deletedExpenseId = currentDayExpenses[index].id;
-    localDb.deleteExpense(deletedExpenseId);
-    setState(() {
-      monthExpenses.remove(currentDayExpenses[index]);
-      currentDayExpenses.removeAt(index);
-      BuildCategoriesTotal();
-      totalDaySpendings = CurrentDaySpendings();
-    });
-  }
-
-  EditExpense(int index) {
-    var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: currentDayExpenses[index],);
-    showDialog (context: context, builder: (context) => popup)
-    .then((value) {
-      (popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) ? currentDayExpenses[index] = popup.getExpense! : currentDayExpenses.removeAt(index);
-      var updatedList = currentDayExpenses;
-      setState(() {
-        currentDayExpenses = updatedList;
-        BuildCategoriesTotal();
-        totalDaySpendings = CurrentDaySpendings();
-      });
-    spendedValueController.clear();
-    noteController.clear();
-    });
-  }
-
-  String CurrentDaySpendings() {
-    if (currentDayExpenses.isNotEmpty) {
-      return totalDaySpendings = currentDayExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString();
-    }
-    return '0';
-  }
-
-  Color GetColorForCategory(BugetEnum bugetEnum) {
-    switch(bugetEnum) {
-      case BugetEnum.fixedCosts:
-        return const Color.fromARGB(255, 124, 155, 255);
-      case BugetEnum.freeSpendings:
-        return const Color.fromARGB(255, 152, 255, 152);
-      case BugetEnum.savings:
-        return const Color.fromARGB(255, 213, 178, 248);
-      case BugetEnum.investing:
-        return const Color.fromARGB(255, 255, 215, 152);
-    }
-  }
-
-  AddNewExpense() {
-    if (displayedValue.isEmpty) return;
-    var now = DateTime.now();
-    selectedCategoryIndex ??= 0;
-    Expense expense = Expense(
-      spendedValue: double.parse(displayedValue),
-      category: localDb.defaultCategorys[selectedCategoryIndex!],
-      date: DateTime(now.year, now.month, now.day),
-      note: ""
-    );
-    localDb.createNewExpense(expense);
-    setState(() {
-      currentDayExpenses.add(expense);
-      monthExpenses.add(expense);
-      BuildCategoriesTotal();
-      displayedValue = "";
-      totalDaySpendings = CurrentDaySpendings();
-    });
-    _scrollController.animateTo(
-      _scrollController.position.viewportDimension,
-      curve: Curves.easeOut,
-      duration: const Duration(milliseconds: 500),
-   );
   }
 
   DisplayValue(String value) {
@@ -396,6 +378,19 @@ class HomePageState extends State<HomePage> {
     setState(() {
       displayedValue = displayedValue.substring(0, displayedValue.length - 1);
     });
+  }
+
+  Color GetColorForCategory(BugetEnum bugetEnum) {
+    switch(bugetEnum) {
+      case BugetEnum.fixedCosts:
+        return const Color.fromARGB(255, 124, 155, 255);
+      case BugetEnum.freeSpendings:
+        return const Color.fromARGB(255, 152, 255, 152);
+      case BugetEnum.savings:
+        return const Color.fromARGB(255, 213, 178, 248);
+      case BugetEnum.investing:
+        return const Color.fromARGB(255, 255, 215, 152);
+    }
   }
 
   @override

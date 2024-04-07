@@ -51,6 +51,10 @@ class ExpenseDatabase extends ChangeNotifier {
     return await isar.expenses.where().findAll();
   }
 
+  Future<List<Category>> getCategories() async {
+    return await isar.categorys.where().findAll();
+  }
+
   Future<List<Expense>> getCurrentDayExpenses() async {
     var allList = await isar.expenses.where().findAll();
     for (int i = 0; i < allList.length; i++) {
@@ -65,9 +69,9 @@ class ExpenseDatabase extends ChangeNotifier {
     });
   }
 
-  Future<void> updateExpense(Expense expense) async {
-    await isar.writeTxn(() async {
-      await isar.expenses.put(expense);
+  void updateExpense(Expense expense) {
+    isar.writeTxnSync(() {
+       isar.expenses.putSync(expense);
     });
   }
 
@@ -99,6 +103,13 @@ class ExpenseDatabase extends ChangeNotifier {
       .idLessThan(4000)
       .deleteAll();
       print('Deleted $count expenses');
+    });
+    await isar.writeTxn(() async {
+      var count = await isar.categorys
+      .filter()
+      .idLessThan(9000)
+      .deleteAll();
+      print('Deleted $count categories');
     });
   }
   
