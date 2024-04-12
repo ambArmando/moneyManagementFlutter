@@ -42,81 +42,6 @@ class StatisticsState extends State<Statistics> {
     UpdatePieChartWithExpensesData();
   }
 
-  String CurrentDaySpendings() {
-    if (_currentDatesExpenses.isNotEmpty) {
-      return totalSpendingsBetweenDates = _currentDatesExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString();
-    }
-    return '0';
-  }
-
-  void BuildExpensesMap() {
-    _expensesMap.clear();
-    for (var expense in _currentDatesExpenses) {
-      if (_expensesMap.containsKey(expense.category.value!.name)) {
-        _expensesMap[expense.category.value!.name] = _expensesMap[expense.category.value!.name]! + expense.spendedValue;
-      }
-      else 
-      {
-        _expensesMap[expense.category.value!.name] = expense.spendedValue;
-      }
-    }
-  }
-
-  void UpdatePieChartWithExpensesData() {
-    _pieData.clear();
-    var expensesMapKeys = _expensesMap.keys.toList();
-    _expensesMap.forEach((key, value) {
-      _pieData.add(PieChartSectionData(
-        value: value,
-        showTitle: true,
-        title: value.toString(),
-        radius: expensesMapKeys.indexOf(key) == touchedIndex ? 70 : 60,
-        titleStyle: TextStyle(
-          fontSize: expensesMapKeys.indexOf(key) == touchedIndex ? 25 : 15,
-          fontWeight: expensesMapKeys.indexOf(key) == touchedIndex ? FontWeight.bold : FontWeight.normal,
-        ),
-        color: GetCategoryColor(key),
-      ));
-    });
-  }
-
-  Color GetCategoryColor(CategoryEnum category) {
-    switch(category){
-      case CategoryEnum.Housing:
-        return Colors.green;
-      case CategoryEnum.Utilities:
-        return Colors.green[200]!;
-      case CategoryEnum.Transportation:
-        return Colors.green[300]!;
-      case CategoryEnum.Groceries:
-        return Colors.green[400]!;
-      case CategoryEnum.EmergencyFund:
-        return Colors.pink[700]!;
-      case CategoryEnum.ShortTermGoals:
-        return Colors.deepOrange[400]!;
-      case CategoryEnum.LongTermGoals:
-        return Colors.deepOrange[400]!;
-      case CategoryEnum.Education:
-        return Colors.deepOrange[400]!;
-      case CategoryEnum.StockMarket:
-        return Colors.deepOrange[400]!;
-      case CategoryEnum.Cryptocurrency:
-        return Colors.deepOrange[400]!;
-      case CategoryEnum.Travel:
-        return Colors.deepOrange[400]!;
-      case CategoryEnum.Hobbies:
-        return Colors.deepOrange[400]!;
-      case CategoryEnum.Gifts:
-        return Colors.deepOrange[400]!;
-      case CategoryEnum.Shopping:
-        return Colors.deepOrange[400]!;
-      case CategoryEnum.DiningOut:
-        return Colors.deepOrange[400]!;
-      default: 
-        return Colors.transparent;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -137,80 +62,29 @@ class StatisticsState extends State<Statistics> {
 
   Widget _buildMainWidget() {
     return Scaffold(
-            body: Column(  
-                children: [
-                  Expanded(
-                    child: Row(children: [
-                      Expanded(
-                        flex: 5,
-                        child: Center(child: Text("Expenses from ${DateFormat('dd.MM.yyyy').format(startDate)} to ${DateFormat('dd.MM.yyyy').format(endDate)}",
-                        style: const TextStyle(fontSize: 16))
-                        )),
-                      Expanded(
-                        child: ElevatedButton(onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) => AlertDialog(title: const Text("Change date's"), 
-                            content: StatefulBuilder(builder: (context, setState) {
-                              return Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          ElevatedButton(onPressed: () async {
-                                            final DateTime? pickedStartDate = await showDatePicker(
-                                              context: context,
-                                              firstDate: DateTime(2000),
-                                              lastDate: endDate,
-                                            );
-                                            if (pickedStartDate != null) {
-                                              setState(() {
-                                                startDate = pickedStartDate;
-                                              });
-                                            }
-                                          }, child: const Text("Pick start date")),
-                                          Text(DateFormat('dd MMMM yyyy').format(startDate), style: const TextStyle(fontSize: 16),)
-                                        ]
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          ElevatedButton(onPressed: () async {
-                                            final DateTime? pickedEndDate = await showDatePicker(
-                                              context: context,
-                                              firstDate: startDate,
-                                              lastDate: DateTime(2100)
-                                            );
-                                            if (pickedEndDate != null) {
-                                              setState(() {
-                                                endDate = pickedEndDate;
-                                              });
-                                            }
-                                          }, child: const Text("Pick end date")),
-                                          Padding(
-                                            padding: const EdgeInsets.only(left: 18.0),
-                                            child: Text(DateFormat('dd MMMM yyyy').format(endDate), style: const TextStyle(fontSize: 16)),
-                                          )
-                                        ]
-                                      ),
-                                    ],
-                                  );
-                            },), 
-                                actions: [
-                                  _saveButton(),
-                                  _cancelButton(),
-                                ],
-                              ),
-                            );
-                        }, child: const Icon(Icons.date_range)),
-                      ),
-                    ],),
-                  ),
-                  Expanded(
-                    flex: 4,
+      body: Column(  
+        children: [
+          const SizedBox(height: 10),
+          Row ( 
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("${DateFormat('d.MMMM.yyyy').format(startDate)} - ${DateFormat('d.MMMM.yyyy').format(endDate)}",
+                style:const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+              ),
+              ElevatedButton(onPressed: () { ChangeDates(); },
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                ),
+                child: const Icon(Icons.date_range),
+              ),
+            ],
+          ),
+          Expanded(
+                    flex: 1,
                     child: Container(
                       color: Colors.grey[100],
                       child: Stack(
@@ -259,7 +133,7 @@ class StatisticsState extends State<Statistics> {
                             ]
                           ),
                           Positioned(
-                            bottom: 0,
+                            bottom: 3,
                             left: 5,
                             child: SizedBox(
                               width: MediaQuery.of(context).size.width,
@@ -270,7 +144,7 @@ class StatisticsState extends State<Statistics> {
                     ),
                   ),
                   Expanded(
-                    flex: 3,
+                    flex: 1,
                     child: ListView.builder(
                       itemCount: _currentDatesExpensesCopy.length,
                       itemBuilder: (context, int index) {
@@ -288,31 +162,152 @@ class StatisticsState extends State<Statistics> {
           ); 
   }
 
-  DeleteExpense(int index) {
-    if (_currentDatesExpensesCopy.contains(_currentDatesExpensesCopy[index])) {
-      localDb.deleteExpense(_currentDatesExpensesCopy[index].id);
-    } 
-    var deletedExpense = _currentDatesExpensesCopy[index];
-    _currentDatesExpenses.remove(_currentDatesExpensesCopy[index]);
-    _currentDatesExpensesCopy.removeAt(index);
-    _expensesMap[deletedExpense.category.value!.name] = _expensesMap[deletedExpense.category.value!.name]! - deletedExpense.spendedValue;
-    
-    var keysToBeRemoved = [];
-    for (var key in _expensesMap.keys) {
-      if (_expensesMap[key]! == 0) {
-        keysToBeRemoved.add(key);
+  Future<dynamic> ChangeDates() {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(title: const Text("Change dates"), 
+      content: StatefulBuilder(builder: (context, setState) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton(onPressed: () async {
+                    final DateTime? pickedStartDate = await showDatePicker(
+                      context: context,
+                      firstDate: DateTime(2000),
+                      lastDate: endDate,
+                    );
+                    if (pickedStartDate != null) {
+                      setState(() {
+                        startDate = pickedStartDate;
+                      });
+                    }
+                  }, child: const Text("Pick start date")),
+                  Text(DateFormat('dd MMM yyyy').format(startDate), style: const TextStyle(fontSize: 16),)
+                ]
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(onPressed: () async {
+                    final DateTime? pickedEndDate = await showDatePicker(
+                      context: context,
+                      firstDate: startDate,
+                      lastDate: DateTime(2100)
+                    );
+                    if (pickedEndDate != null) {
+                      setState(() {
+                        endDate = pickedEndDate;
+                      });
+                    }
+                  }, child: const Text("Pick end date")),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 18.0),
+                      child: Text(DateFormat('dd MMM yyyy').format(endDate), style: const TextStyle(fontSize: 16)),
+                  )
+                ]
+              ),
+            ],
+          );
+        }), 
+        actions: [
+          _saveButton(),
+          _cancelButton(),
+        ],
+      ),
+    );
+  }
+
+  void BuildExpensesMap() {
+    _expensesMap.clear();
+    for (var expense in _currentDatesExpenses) {
+      if (_expensesMap.containsKey(expense.category.value!.name)) {
+        _expensesMap[expense.category.value!.name] = _expensesMap[expense.category.value!.name]! + expense.spendedValue;
+      }
+      else 
+      {
+        _expensesMap[expense.category.value!.name] = expense.spendedValue;
       }
     }
-    for (var key in keysToBeRemoved) {
-      _expensesMap.remove(key);
+  }
+
+  void UpdatePieChartWithExpensesData() {
+    _pieData.clear();
+    var expensesMapKeys = _expensesMap.keys.toList();
+    _expensesMap.forEach((key, value) {
+      _pieData.add(PieChartSectionData(
+        value: value,
+        showTitle: true,
+        title: value.toString(),
+        radius: expensesMapKeys.indexOf(key) == touchedIndex ? 70 : 60,
+        titleStyle: TextStyle(
+          fontSize: expensesMapKeys.indexOf(key) == touchedIndex ? 25 : 15,
+          fontWeight: expensesMapKeys.indexOf(key) == touchedIndex ? FontWeight.bold : FontWeight.normal,
+        ),
+        color: GetCategoryColor(key),
+      ));
+    });
+  }
+
+  void DeleteExpense(int index) {
+    var deletedExpense = _currentDatesExpensesCopy[index];
+    var deletedExpenseCategory = deletedExpense.category.value!.name;
+    if (_currentDatesExpensesCopy.contains(deletedExpense)) {
+      localDb.deleteExpense(deletedExpense.id);
+    } 
+    _currentDatesExpenses.remove(deletedExpense);
+    _currentDatesExpensesCopy.removeAt(index);
+    _expensesMap[deletedExpenseCategory] = _expensesMap[deletedExpenseCategory]! - deletedExpense.spendedValue;
+    
+    if (_expensesMap[deletedExpenseCategory] == 0) {
+      _expensesMap.remove(deletedExpenseCategory);
     }
+
+    if (_currentDatesExpensesCopy.isEmpty) {
+      touchedIndex = -1;
+    }
+
     if (_currentDatesExpensesCopy.isNotEmpty && touchedIndex != -1){
-      touchedIndex = _expensesMap.keys.toList().indexOf(deletedExpense.category.value!.name);
+      touchedIndex = _expensesMap.keys.toList().indexOf(deletedExpenseCategory);
     }
+
     UpdatePieChartWithExpensesData();
     FilterExpensesOnPieChartTouch(touchedIndex);
     setState(() { 
       totalSpendingsBetweenDates = CurrentDaySpendings();
+    });
+  }
+
+  EditExpense(int index) {
+    var editedExpense = _currentDatesExpensesCopy[index];
+    var editedExpenseCategory = editedExpense.category.value!.name;
+    _expensesMap[editedExpenseCategory] = _expensesMap[editedExpenseCategory]! - editedExpense.spendedValue;
+    var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: editedExpense);
+    showDialog (context: context, builder: (context) => popup)
+    .then((value) {
+      if (popup.getExpense!.date.isBefore(startDate) || popup.getExpense!.date.isAfter(endDate)) {
+        _currentDatesExpensesCopy.removeAt(index);
+        _currentDatesExpenses.remove(editedExpense);
+      }
+      else 
+      {
+        _expensesMap.containsKey(editedExpense.category.value!.name) ? _expensesMap[editedExpense.category.value!.name] = _expensesMap[editedExpense.category.value!.name]! + editedExpense.spendedValue : _expensesMap[editedExpense.category.value!.name] = editedExpense.spendedValue;
+      }
+
+      if (_expensesMap[editedExpenseCategory] == 0) {
+        _expensesMap.remove(editedExpenseCategory);
+        touchedIndex = _expensesMap.keys.toList().indexOf(editedExpense.category.value!.name);
+      }
+
+      UpdatePieChartWithExpensesData();
+      FilterExpensesOnPieChartTouch(touchedIndex);
+      setState(() {
+        totalSpendingsBetweenDates = CurrentDaySpendings();
+      }); 
     });
   }
 
@@ -324,39 +319,6 @@ class StatisticsState extends State<Statistics> {
     }
     var keysIndex = _expensesMap.keys.toList();
     _currentDatesExpensesCopy = _currentDatesExpenses.where((element) => keysIndex.elementAt(touchedIndex) == element.category.value!.name).toList();
-  }
-
-  void SetStateAfterDeleteExpense(int index) {
-    setState(() {
-      for (int i = 0; i < _pieData.length; i++) {
-        if (_pieData[i].title == _currentDatesExpenses[index].category.value!.name) {
-          _pieData[i] = _pieData[i].copyWith(value: _pieData[i].value - _currentDatesExpenses[index].spendedValue,
-          color: _pieData[i].color,); 
-          break;
-        }
-      }
-    });
-  }
- 
-  EditExpense(int index) {
-    var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: _currentDatesExpensesCopy[index]);
-    showDialog (context: context, builder: (context) => popup)
-    .then((value) {
-      if (popup.getExpense!.date.isBefore(startDate) || popup.getExpense!.date.isAfter(endDate)) {
-        _currentDatesExpensesCopy.removeAt(index);
-        _currentDatesExpenses.remove(_currentDatesExpensesCopy[index]);
-      }
-      if (_currentDatesExpensesCopy.length == 1) {
-        var selectedCategory = popup.getExpense!.category;
-        touchedIndex = _expensesMap.keys.toList().indexOf(selectedCategory.value!.name);
-      }
-      setState(() {
-        BuildExpensesMap();
-        UpdatePieChartWithExpensesData();
-        FilterExpensesOnPieChartTouch(touchedIndex);
-        totalSpendingsBetweenDates = CurrentDaySpendings();
-      }); 
-    });
   }
 
   Widget _cancelButton() {
@@ -385,6 +347,13 @@ class StatisticsState extends State<Statistics> {
       );
   }
 
+  String CurrentDaySpendings() {
+    if (_currentDatesExpenses.isNotEmpty) {
+      return totalSpendingsBetweenDates = _currentDatesExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString();
+    }
+    return '0';
+  }
+
   Widget _pieLegend() {
     List<Widget> legend = [];
     for(var key in _expensesMap.keys) {
@@ -405,6 +374,43 @@ class StatisticsState extends State<Statistics> {
         children: legend
       ),
     );
+  }
+
+  Color GetCategoryColor(CategoryEnum category) {
+    switch(category){
+      case CategoryEnum.Housing:
+        return Colors.blue[300]!;
+      case CategoryEnum.Utilities:
+        return Colors.blue[400]!;
+      case CategoryEnum.Transportation:
+        return Colors.blue[500]!;
+      case CategoryEnum.Groceries:
+        return Colors.blue[600]!;
+      case CategoryEnum.EmergencyFund:
+        return Colors.purple[200]!;
+      case CategoryEnum.ShortTermGoals:
+        return Colors.purple[300]!;
+      case CategoryEnum.LongTermGoals:
+        return Colors.purple[500]!;
+      case CategoryEnum.Education:
+        return Colors.yellow[400]!;
+      case CategoryEnum.StockMarket:
+        return Colors.yellow[500]!;
+      case CategoryEnum.Cryptocurrency:
+        return Colors.yellow[600]!;
+      case CategoryEnum.Travel:
+        return Colors.lightGreen[200]!;
+      case CategoryEnum.Hobbies:
+        return Colors.lightGreen[300]!;
+      case CategoryEnum.Gifts:
+        return Colors.lightGreen[400]!;
+      case CategoryEnum.Shopping:
+        return Colors.lightGreen[500]!;
+      case CategoryEnum.DiningOut:
+        return Colors.lightGreen[600]!;
+      default: 
+        return Colors.transparent;
+    }
   }
 
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:money_management/components/store.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/pages/home.dart';
@@ -6,7 +7,8 @@ import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await ExpenseDatabase.initialize();
+  await ExpenseDatabase().initialize();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
   runApp(
     ChangeNotifierProvider(
       create: (context) => Store(),

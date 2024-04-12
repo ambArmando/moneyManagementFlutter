@@ -10,7 +10,7 @@ import '../models/category.dart';
 class ExpenseDatabase extends ChangeNotifier {
   static late Isar isar;
   final List<Expense> _allExpenses = [];
-  static final List<Category> _defaultCategorys = [
+  final List<Category> _defaultCategorys = [
     Category(name: CategoryEnum.Housing, bugetCategory: BugetEnum.fixedCosts, imgPath: "Housing.png"),
     Category(name: CategoryEnum.Utilities, bugetCategory: BugetEnum.fixedCosts, imgPath: "Utilities.png"),
     Category(name: CategoryEnum.Transportation, bugetCategory: BugetEnum.fixedCosts, imgPath: "Transportation.png"),
@@ -28,7 +28,7 @@ class ExpenseDatabase extends ChangeNotifier {
     Category(name: CategoryEnum.DiningOut, bugetCategory: BugetEnum.freeSpendings, imgPath: "diningout.png"),
   ];
 
-  static Future<void> initialize() async {
+  Future<void> initialize() async {
     final dir = await getApplicationDocumentsDirectory();
     isar = await Isar.open([ExpenseSchema, CategorySchema, BudgetSchema], directory: dir.path);
     if (await isar.categorys.count() < 1) {
@@ -52,7 +52,9 @@ class ExpenseDatabase extends ChangeNotifier {
   }
 
   Future<List<Category>> getCategories() async {
-    return await isar.categorys.where().findAll();
+    return await isar.categorys
+    .where(distinct: true)
+    .findAll();
   }
 
   Future<List<Expense>> getCurrentDayExpenses() async {

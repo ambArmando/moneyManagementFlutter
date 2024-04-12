@@ -1,15 +1,15 @@
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:money_management/components/my_list_tile.dart';
 import 'package:money_management/components/my_popup.dart';
-import 'package:money_management/components/store.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/enums/buget_categories_enum.dart';
 import 'package:money_management/models/budget.dart';
 import 'package:money_management/models/category.dart';
 import 'package:money_management/models/expense.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget{
   const HomePage({super.key});
@@ -31,6 +31,7 @@ class HomePageState extends State<HomePage> {
   TextEditingController spendedValueController = TextEditingController();
   TextEditingController noteController = TextEditingController();
   ScrollController _scrollController = ScrollController();
+  List<Category> queryDefaultCategories = [];
 
   @override
   void initState() {
@@ -43,6 +44,7 @@ class HomePageState extends State<HomePage> {
     var startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
     var endDate = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
     setBudget = await localDb.getBuget(DateTime.now().month, DateTime.now().year);
+    queryDefaultCategories = await localDb.getCategories();
     currentMonthExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
     currentDayExpenses = currentMonthExpenses.where((element) => element.date.day == DateTime.now().day && element.date.month == DateTime.now().month && element.date.year == DateTime.now().year).toList();
     CalculateCategoryTotals();
@@ -56,186 +58,289 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      floatingActionButton: TextButton(
-        onPressed: () => {localDb.deleteAllData()},
-        child: const Text("Delete data")
+      floatingActionButton: Visibility(
+        visible: false,
+        child: TextButton(
+          onPressed: () => {localDb.deleteAllData()},
+          child: const Text("Delete data")
+        ),
       ),
-      body: isLoading ? const Center(child: CircularProgressIndicator(),) : Column(
-        children: [
-          const SizedBox(height: 35),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text("Spendings:"),
-                  Text(DateFormat('dd.MM.yyyy').format(DateTime.now()))
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Text(
-                  totalDaySpendings ?? "0",
-                  style:
-                    const TextStyle(
-                      fontSize: 28
+      body: isLoading ? const Center(child: CircularProgressIndicator(),) : SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text("Spendings:"),
+                    Text(DateFormat('dd.MM.yyyy').format(DateTime.now()))
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Text(
+                    totalDaySpendings ?? "0",
+                    style:
+                      const TextStyle(
+                        fontSize: 28
+                      ),
+                    ),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(top: 14, left: 5),
+                  child: Text(displayedValue,
+                    style: const TextStyle(
+                      fontSize: 16
                     ),
                   ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 14, left: 5),
-                child: Text(displayedValue,
-                  style: const TextStyle(
-                    fontSize: 16
-                  ),
-                ),
-              )
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 60,
-            child: Center(
-              child: Consumer<Store>(
-                builder: (context, store, _)
-                {
-                  return ListView.builder(
-                    itemCount: localDb.defaultCategorys.length,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, int index) => GestureDetector(
-                      child: Container(
-                        width: 80,
-                        margin: const EdgeInsets.symmetric(horizontal: 9),
-                        decoration: BoxDecoration(
-                          color: index == selectedCategoryIndex ? Colors.grey[300] : GetColorForCategory(localDb.defaultCategorys[index].bugetCategory),
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Positioned(
-                              top: 0,
-                              right: 2,
-                              child: Visibility(
-                                visible: (setBudget?.value ?? 0) > 0 && (IsBudgetAboveLimit(store, localDb.defaultCategorys[index])),
-                                child: Icon(Icons.warning_amber_rounded, color: Colors.red[600], size: 22,))
-                            ),
-                            Positioned(
-                              top: 10,
-                              child: Image.asset("assets/${localDb.defaultCategorys.map((category) => category.name.name.toLowerCase()).toList()[index]}.png", width: 26.0, height: 26.0,)),
-                            Positioned(
-                              bottom: 3,
-                              child: Text(localDb.defaultCategorys.map((e) => e.name.name).toList()[index],
-                                maxLines: 1,
-                                style: const TextStyle(
-                                  fontSize: 12,
+                )
+              ],
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              height: 60,
+              child: Center(
+                child: ListView.builder(
+                  itemCount: localDb.defaultCategorys.length,
+                  scrollDirection: Axis.horizontal,
+                  itemBuilder: (context, int index) => GestureDetector(
+                    child: Container(
+                      width: 80,
+                      margin: const EdgeInsets.symmetric(horizontal: 9),
+                      decoration: BoxDecoration(
+                        color: index == selectedCategoryIndex ? Colors.grey[300] : GetColorForCategory(localDb.defaultCategorys[index].bugetCategory),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Positioned(
+                            top: 0,
+                            right: 2,
+                            child: Visibility(
+                              visible: (setBudget?.value ?? 0) > 0 && (IsBudgetAboveLimit(localDb.defaultCategorys[index])),
+                              child: Icon(Icons.warning_amber_rounded, color: Colors.red[600], size: 22,))
+                          ),
+                          Positioned(
+                            top: 10,
+                            child: Image.asset("assets/${localDb.defaultCategorys.map((category) => category.name.name.toLowerCase()).toList()[index]}.png", width: 26.0, height: 26.0,)),
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 3.0, left: 2, right: 2),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(queryDefaultCategories.map((e) => e.name.name).toList()[index],
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    overflow: TextOverflow.ellipsis,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      onTap: () {
-                        setState(() {
-                          selectedCategoryIndex = index;
-                        });
-                      },
-                    )
+                    ),
+                    onTap: () {
+                      setState(() {
+                        selectedCategoryIndex = index;
+                      });
+                    },
+                  )
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 350,
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: currentDayExpenses.length,
+                itemBuilder: (context, int index) { 
+                  Expense individualExpense = currentDayExpenses[index];
+                  return MyListTile(
+                    expense: individualExpense,
+                    onEditPressed: (context) => {EditExpense(index)},
+                    onDeletePressed: (context) => {DeleteExpense(index)},
                   );
                 },
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 280,
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: currentDayExpenses.length,
-              itemBuilder: (context, int index) { 
-                Expense individualExpense = currentDayExpenses[index];
-                return MyListTile(
-                  expense: individualExpense,
-                  onEditPressed: (context) => {EditExpense(index)},
-                  onDeletePressed: (context) => {DeleteExpense(index)},
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 10),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(onPressed: () => {DisplayValue("1")},
-                    style: ElevatedButton.styleFrom(
-                    elevation: 1,
-                  ), child: const Text("1", style: TextStyle(
-                      color: Colors.black,
+            const SizedBox(height: 5),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("1")},
+                          style: ElevatedButton.styleFrom(
+                          elevation: 1,
+                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                        ), child: const Text("1", style: TextStyle(
+                          ),
+                        ),),
+                      ),
                     ),
-                  ),),
-                  ElevatedButton(onPressed: () => {DisplayValue("2")}, child: const Text("2")),
-                  ElevatedButton(onPressed: () => {DisplayValue("3")}, child: const Text("3"))
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(onPressed: () => {DisplayValue("4")}, child: const Text("4")),
-                  ElevatedButton(onPressed: () => {DisplayValue("5")}, child: const Text("5")),
-                  ElevatedButton(onPressed: () => {DisplayValue("6")}, child: const Text("6"))
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(onPressed: () => {DisplayValue("7")}, child: const Text("7")),
-                  ElevatedButton(onPressed: () => {DisplayValue("8")}, child: const Text("8")),
-                  ElevatedButton(onPressed: () => {DisplayValue("9")}, child: const Text("9"))
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(onPressed: () {NewExpenseFromPopup(context);}, style: ElevatedButton.styleFrom(
-                    elevation: 1,
-                  ), child: const Icon(Icons.add_comment),),
-                  ElevatedButton(onPressed: () => {DisplayValue("0")}, child: const Text("0")),
-                  ElevatedButton(onPressed: () => {RemoveValue()}, child: const Icon(Icons.backspace_outlined)),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  SizedBox(
-                    width: 120,
-                    child: ElevatedButton(onPressed: () => {AddNewExpense()}, style: ElevatedButton.styleFrom(
-                      elevation: 1,
-                                  
-                    ), child: const Icon(Icons.add),),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10)
-        ],
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4, right: 4.0),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("2")},
+                        style: ElevatedButton.styleFrom(
+                          elevation: 1,
+                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                        ), child: const Text("2"),),
+                      )),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 4.0),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("3")},
+                        style: ElevatedButton.styleFrom(
+                          elevation: 1,
+                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                        ), child: const Text("3"),),
+                      ))
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("4")}, 
+                        style: ElevatedButton.styleFrom(
+                            elevation: 1,
+                            shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                          ), child: const Text("4"),),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4, right: 4.0),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("5")}, 
+                        style: ElevatedButton.styleFrom(
+                            elevation: 1,
+                            shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                          ), child: const Text("5"),),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 4.0),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("6")}, 
+                        style: ElevatedButton.styleFrom(
+                          elevation: 1,
+                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                        ), child: const Text("6"),),
+                      ))
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("7")},
+                        style: ElevatedButton.styleFrom(
+                            elevation: 1,
+                            shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                          ), child: const Text("7"),),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4, right: 4.0),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("8")}, style: ElevatedButton.styleFrom(
+                            elevation: 1,
+                            shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                          ), child: const Text("8"),),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 4.0),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("9")}, style: ElevatedButton.styleFrom(
+                            elevation: 1,
+                            shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                          ), child: const Text("9"),),
+                      ),
+                    )
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: ElevatedButton(onPressed: () {NewExpenseFromPopup(context);}, style: ElevatedButton.styleFrom(
+                          elevation: 1,
+                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                        ), child: const Icon(Icons.add_comment),),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4, right: 4.0),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("0")}, 
+                        style: ElevatedButton.styleFrom(
+                          elevation: 1,
+                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                        ), child: const Text("0")),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 4.0),
+                        child: ElevatedButton(onPressed: () => {RemoveValue()},
+                        style: ElevatedButton.styleFrom(
+                          elevation: 1,
+                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
+                        ), child: const Icon(Icons.backspace_outlined),),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    SizedBox(
+                      width: 125,
+                      child: ElevatedButton(onPressed: () => {AddNewExpense()}, style: ElevatedButton.styleFrom(
+                        elevation: 1,
+                        shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))   
+                      ), child: const Icon(Icons.add),),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10)
+          ],
+        ),
       ),
     );
   }
 
-  bool IsBudgetAboveLimit(Store store, Category category) {
+  bool IsBudgetAboveLimit(Category category) {
     if (_expenseCategoryTotalsMap.containsKey(category.bugetCategory)) { 
       return _expenseCategoryTotalsMap[category.bugetCategory]! > CalculateMaxBudget(category.bugetCategory);
     }
-    if (store.isBudgetCategoryValueAboveLimitMap.containsKey(category.bugetCategory)) {
-      return store.isBudgetCategoryValueAboveLimitMap[category.bugetCategory] ?? false;
-    }
+    // if (store.isBudgetCategoryValueAboveLimitMap.containsKey(category.bugetCategory) && _expenseCategoryTotalsMap.containsKey(category.bugetCategory)) {
+    //   return store.isBudgetCategoryValueAboveLimitMap[category.bugetCategory] ?? false;
+    // }
     return false;
   }
 
@@ -250,15 +355,17 @@ class HomePageState extends State<HomePage> {
     ).then((value) {
       if (popup.getExpense != null && popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) {
         currentDayExpenses.add(popup.getExpense!);
+        _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory] = _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory]! + popup.getExpense!.spendedValue;
+        displayedValue = "";
+        spendedValueController.clear();
+        noteController.clear();
+        setState(() {
+          totalDaySpendings = CalculateCurrentDaySpendingsTotal();
+        });
       }
-      currentMonthExpenses.add(popup.getExpense!);
-      _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory] = _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory]! + popup.getExpense!.spendedValue;
-      displayedValue = "";
-      spendedValueController.clear();
-      noteController.clear();
-      setState(() {
-        totalDaySpendings = CalculateCurrentDaySpendingsTotal();
-      });
+      if (popup.getExpense != null) {
+        currentMonthExpenses.add(popup.getExpense!);
+      }
     });
   }
 
@@ -270,7 +377,7 @@ class HomePageState extends State<HomePage> {
     selectedCategoryIndex ??= 0;
     Expense expense = Expense(
       spendedValue: double.parse(displayedValue),
-      category: localDb.defaultCategorys[selectedCategoryIndex!],
+      category: queryDefaultCategories[selectedCategoryIndex!],
       date: DateTime(now.year, now.month, now.day),
       note: ""
     );

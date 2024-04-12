@@ -31,7 +31,8 @@ class MyPopupState extends State<MyPopup>{
   late ExpenseDatabase _localDb;
   DateTime? selectedDate = DateTime.now();
   Category? selectedCategory;
-  Set<Category> _defaultCategories = {};
+  List<Category> _defaultCategories = [];
+  String? errorTextValue;
   
   @override
   void initState() {
@@ -61,23 +62,35 @@ class MyPopupState extends State<MyPopup>{
                     maxLength: 5,
                     keyboardType: TextInputType.number,
                     controller: _spendedValueController,
-                    decoration: const InputDecoration(hintText: "Value"),
+                    decoration: InputDecoration(
+                      hintText: "Value",
+                      errorText: errorTextValue,
+                    ),
                   ),
                   const SizedBox(height: 15),
-                  DropdownButton<Category>(
-                    hint: const Text("Select category"),
-                    isExpanded: true,
-                    value: selectedCategory,
-                    items: _defaultCategories!.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(category.name.name));
-                    }).toList(),
-                    onChanged: (Category? newSelectedCategory) {
-                      setState(() {
-                      selectedCategory = newSelectedCategory;
-                    });
-                    },
+                  Container(
+                    decoration: BoxDecoration(
+                      border: selectedCategory == null ? Border.all(color: Colors.red) : null,
+                      borderRadius: BorderRadius.circular(8.0)
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: DropdownButton<Category>(
+                        hint: const Text("Select category"),
+                        isExpanded: true,
+                        value: selectedCategory,
+                        items: _defaultCategories.map((category) {
+                          return DropdownMenuItem(
+                            value: category,
+                            child: Text(category.name.name));
+                        }).toList(),
+                        onChanged: (Category? newSelectedCategory) {
+                          setState(() {
+                          selectedCategory = newSelectedCategory;
+                        });
+                        },
+                      ),
+                    ),
                   ),
                   TextField(
                     maxLength: 40,
@@ -105,7 +118,7 @@ class MyPopupState extends State<MyPopup>{
                         Expanded(
                           child: Container(
                             margin: const EdgeInsets.only(left: 15),
-                            child: Text(selectedDate == null ? DateFormat('dd MMMM yyyy').format(DateTime.now()) : DateFormat('dd MMMM yyyy').format(selectedDate!))),
+                            child: Text(selectedDate == null ? DateFormat('dd MMM yyyy').format(DateTime.now()) : DateFormat('dd MMM yyyy').format(selectedDate!))),
                         ),
                       ],
                     ),
@@ -137,6 +150,14 @@ class MyPopupState extends State<MyPopup>{
   Widget _saveButton() {
     return MaterialButton(
       onPressed: () async {
+        
+        if (_spendedValueController.text.isEmpty) {
+          setState(() {
+            errorTextValue = "Add a value!"; 
+          });
+          return;
+        }
+
         if (widget.expense == null && _spendedValueController.text.isNotEmpty && selectedCategory != null)
         {
           Expense newExpense = Expense(
@@ -148,7 +169,7 @@ class MyPopupState extends State<MyPopup>{
           widget.expense = newExpense;
           Navigator.pop(context);
           _localDb.createNewExpense(newExpense);
-        } else if (widget.expense != null) {
+        } else if (widget.expense != null && _spendedValueController.text.isNotEmpty && selectedCategory != null) {
           widget.expense!.spendedValue = double.parse(_spendedValueController.text);
           widget.expense!.category.value = selectedCategory!;
           widget.expense!.note = _noteController.text;
@@ -156,6 +177,8 @@ class MyPopupState extends State<MyPopup>{
           Navigator.pop(context);
           _localDb.updateExpense(widget.expense!);
         }
+
+        errorTextValue = null;
       },
       child: const Text("Save"),
     );
@@ -164,7 +187,7 @@ class MyPopupState extends State<MyPopup>{
   void LoadDefaultCategories() async{
     var query = await _localDb.getCategories();
     setState(() {
-      _defaultCategories = query.toSet();
+      _defaultCategories = query;
     });
   }
 }
