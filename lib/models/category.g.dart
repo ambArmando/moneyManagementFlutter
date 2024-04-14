@@ -23,13 +23,18 @@ const CategorySchema = CollectionSchema(
       type: IsarType.byte,
       enumMap: _CategorybugetCategoryEnumValueMap,
     ),
-    r'imgPath': PropertySchema(
+    r'hashCode': PropertySchema(
       id: 1,
+      name: r'hashCode',
+      type: IsarType.long,
+    ),
+    r'imgPath': PropertySchema(
+      id: 2,
       name: r'imgPath',
       type: IsarType.string,
     ),
     r'name': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'name',
       type: IsarType.byte,
       enumMap: _CategorynameEnumValueMap,
@@ -71,8 +76,9 @@ void _categorySerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeByte(offsets[0], object.bugetCategory.index);
-  writer.writeString(offsets[1], object.imgPath);
-  writer.writeByte(offsets[2], object.name.index);
+  writer.writeLong(offsets[1], object.hashCode);
+  writer.writeString(offsets[2], object.imgPath);
+  writer.writeByte(offsets[3], object.name.index);
 }
 
 Category _categoryDeserialize(
@@ -85,8 +91,8 @@ Category _categoryDeserialize(
     bugetCategory:
         _CategorybugetCategoryValueEnumMap[reader.readByteOrNull(offsets[0])] ??
             BugetEnum.fixedCosts,
-    imgPath: reader.readStringOrNull(offsets[1]),
-    name: _CategorynameValueEnumMap[reader.readByteOrNull(offsets[2])] ??
+    imgPath: reader.readStringOrNull(offsets[2]),
+    name: _CategorynameValueEnumMap[reader.readByteOrNull(offsets[3])] ??
         CategoryEnum.Housing,
   );
   object.id = id;
@@ -105,8 +111,10 @@ P _categoryDeserializeProp<P>(
               reader.readByteOrNull(offset)] ??
           BugetEnum.fixedCosts) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 2:
+      return (reader.readStringOrNull(offset)) as P;
+    case 3:
       return (_CategorynameValueEnumMap[reader.readByteOrNull(offset)] ??
           CategoryEnum.Housing) as P;
     default:
@@ -296,6 +304,59 @@ extension CategoryQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'bugetCategory',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> hashCodeEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'hashCode',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> hashCodeGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'hashCode',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> hashCodeLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'hashCode',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> hashCodeBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'hashCode',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -575,6 +636,18 @@ extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
     });
   }
 
+  QueryBuilder<Category, Category, QAfterSortBy> sortByHashCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hashCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> sortByHashCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hashCode', Sort.desc);
+    });
+  }
+
   QueryBuilder<Category, Category, QAfterSortBy> sortByImgPath() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imgPath', Sort.asc);
@@ -611,6 +684,18 @@ extension CategoryQuerySortThenBy
   QueryBuilder<Category, Category, QAfterSortBy> thenByBugetCategoryDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'bugetCategory', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> thenByHashCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hashCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> thenByHashCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hashCode', Sort.desc);
     });
   }
 
@@ -659,6 +744,12 @@ extension CategoryQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Category, Category, QDistinct> distinctByHashCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hashCode');
+    });
+  }
+
   QueryBuilder<Category, Category, QDistinct> distinctByImgPath(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -684,6 +775,12 @@ extension CategoryQueryProperty
   QueryBuilder<Category, BugetEnum, QQueryOperations> bugetCategoryProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'bugetCategory');
+    });
+  }
+
+  QueryBuilder<Category, int, QQueryOperations> hashCodeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'hashCode');
     });
   }
 

@@ -29,9 +29,9 @@ class HomeState extends State<Home> {
           });
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.timeline), label: "Home"),
-          NavigationDestination(icon: Icon(Icons.bar_chart_sharp), label: "Statistics"),
-          NavigationDestination(icon: Icon(Icons.wallet), label: "Buget"),
+          NavigationDestination(icon: Icon(Icons.timeline), label: "Timeline"),
+          NavigationDestination(icon: Icon(Icons.pie_chart), label: "Statistics"),
+          NavigationDestination(icon: Icon(Icons.bar_chart), label: "Budget"),
         ],
       ),  
     );

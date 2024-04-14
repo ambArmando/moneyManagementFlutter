@@ -114,5 +114,15 @@ class ExpenseDatabase extends ChangeNotifier {
       print('Deleted $count categories');
     });
   }
+
+  void deleteBudget() async{
+    await isar.writeTxn(() async {
+      var count = await isar.budgets
+      .filter()
+      .idLessThan(4000)
+      .deleteAll();
+      print('Deleted $count budgets');
+    });
+  }
   
 }

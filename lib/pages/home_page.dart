@@ -59,9 +59,9 @@ class HomePageState extends State<HomePage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       floatingActionButton: Visibility(
-        visible: false,
+        visible: true,
         child: TextButton(
-          onPressed: () => {localDb.deleteAllData()},
+          onPressed: () => {localDb.deleteBudget()},
           child: const Text("Delete data")
         ),
       ),
@@ -461,13 +461,13 @@ class HomePageState extends State<HomePage> {
   int GetPercentage(BugetEnum bugetEnum) {
     switch(bugetEnum){
       case BugetEnum.fixedCosts:
-        return 50;
+        return setBudget!.fixedCosts!;
       case BugetEnum.freeSpendings:
-        return 35;
+        return setBudget!.freeSpendings!;
       case BugetEnum.savings:
-        return 10;
+        return setBudget!.savings!;
       case BugetEnum.investing:
-        return 5;
+        return setBudget!.investing!;
     }
   }
 

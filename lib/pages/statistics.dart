@@ -338,6 +338,7 @@ class StatisticsState extends State<Statistics> {
           _currentDatesExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
           _currentDatesExpensesCopy = List.from(_currentDatesExpenses);
           setState(() {
+            touchedIndex = -1;
             BuildExpensesMap();
             UpdatePieChartWithExpensesData();
             totalSpendingsBetweenDates = CurrentDaySpendings();
