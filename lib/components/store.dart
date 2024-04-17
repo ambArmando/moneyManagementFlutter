@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:money_management/enums/buget_categories_enum.dart';
 
 
 class Store extends ChangeNotifier {
   
-  Map<BugetEnum, bool> _isBudgetCategoryValueAboveLimitMap = {};
+  DateTime? _firstDayOfSelectedMonth;
+  DateTime? _lastDayOfSelectedMonth;
 
-  Map<BugetEnum, bool> get isBudgetCategoryValueAboveLimitMap => _isBudgetCategoryValueAboveLimitMap;
+  DateTime? get firstDayOfSelectedMonth => _firstDayOfSelectedMonth;
+  DateTime? get lastDayOfSelectedMonth => _lastDayOfSelectedMonth;
 
-  void updateData(Map<BugetEnum, bool> isBudgetCategoryValueAboveLimitMapNew) {
-    _isBudgetCategoryValueAboveLimitMap = {...isBudgetCategoryValueAboveLimitMapNew};
+  set firstDayOfSelectedMonth(DateTime? value) {
+    _firstDayOfSelectedMonth = value;
+    notifyListeners();
+  }
+
+  set lastDayOfSelectedMonth(DateTime? value) {
+    _lastDayOfSelectedMonth = value;
     notifyListeners();
   }
 

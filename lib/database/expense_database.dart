@@ -98,6 +98,10 @@ class ExpenseDatabase extends ChangeNotifier {
     });
   }
 
+  Future<List<Budget?>> getAllBudgets () async {
+    return await isar.budgets.where().findAll();
+  }
+
   void deleteAllData() async{
     await isar.writeTxn(() async {
       var count = await isar.expenses

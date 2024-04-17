@@ -1,13 +1,17 @@
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
 
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:money_management/components/my_list_tile.dart';
 import 'package:money_management/components/my_popup.dart';
+import 'package:money_management/components/store.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/enums/category_enum.dart';
 import 'package:money_management/models/expense.dart';
+import 'package:provider/provider.dart';
 
 class Statistics extends StatefulWidget {
   const Statistics({super.key});
@@ -22,8 +26,8 @@ class StatisticsState extends State<Statistics> {
   late List<Expense> _currentDatesExpenses;
   List<PieChartSectionData> _pieData = [];
   Map<CategoryEnum, double> _expensesMap = {};
-  DateTime startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
-  DateTime endDate = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
+  DateTime startDate = DateTime(0);
+  DateTime endDate = DateTime(0);
   String totalSpendingsBetweenDates = "0";
   List<Expense> _currentDatesExpensesCopy = [];
   int? touchedIndex = -1;
@@ -35,6 +39,8 @@ class StatisticsState extends State<Statistics> {
   }
 
   Future<void> InitChart() async {
+    startDate = context.read<Store>().firstDayOfSelectedMonth ?? DateTime(DateTime.now().year, DateTime.now().month, 1);
+    endDate = context.read<Store>().lastDayOfSelectedMonth ?? DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
     _currentDatesExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
     _currentDatesExpensesCopy = List.from(_currentDatesExpenses);
     totalSpendingsBetweenDates = CurrentDaySpendings();
@@ -66,20 +72,27 @@ class StatisticsState extends State<Statistics> {
         children: [
           const SizedBox(height: 10),
           Row ( 
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("${DateFormat('d.MMMM.yyyy').format(startDate)} - ${DateFormat('d.MMMM.yyyy').format(endDate)}",
-                style:const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                flex: 3,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text("${DateFormat('d.MMMM.yyyy').format(startDate)} - ${DateFormat('d.MMMM.yyyy').format(endDate)}",
+                    style:const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                  ),
                 ),
-                maxLines: 1,
               ),
-              ElevatedButton(onPressed: () { ChangeDates(); },
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
+              Expanded(
+                child: ElevatedButton(onPressed: () { ChangeDates(); },
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                  ),
+                  child: const Icon(Icons.date_range),
                 ),
-                child: const Icon(Icons.date_range),
               ),
             ],
           ),

@@ -20,6 +20,18 @@ class Budget {
 
   int? investing;
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Budget &&
+          runtimeType == other.runtimeType &&
+          month == other.month &&
+          year == other.year &&
+          id == other.id;
+
+  @override
+  int get hashCode => month.hashCode ^ id.hashCode;
+
   Budget({
     required this.value,
     required this.month,

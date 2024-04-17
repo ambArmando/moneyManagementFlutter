@@ -1,7 +1,6 @@
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
-import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:money_management/components/my_list_tile.dart';
 import 'package:money_management/components/my_popup.dart';
 import 'package:money_management/database/expense_database.dart';
@@ -9,7 +8,6 @@ import 'package:money_management/enums/buget_categories_enum.dart';
 import 'package:money_management/models/budget.dart';
 import 'package:money_management/models/category.dart';
 import 'package:money_management/models/expense.dart';
-import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget{
   const HomePage({super.key});
@@ -56,10 +54,18 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var keyBoardStyle = ElevatedButton.styleFrom(
+      elevation: 0,
+      foregroundColor: Colors.grey[800],
+      textStyle: const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w500
+      )
+    );
     return Scaffold(
       resizeToAvoidBottomInset: false,
       floatingActionButton: Visibility(
-        visible: true,
+        visible: false,
         child: TextButton(
           onPressed: () => {localDb.deleteBudget()},
           child: const Text("Delete data")
@@ -68,40 +74,63 @@ class HomePageState extends State<HomePage> {
       body: isLoading ? const Center(child: CircularProgressIndicator(),) : SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const Text("Spendings:"),
-                    Text(DateFormat('dd.MM.yyyy').format(DateTime.now()))
-                  ],
+            Container(
+              width: 250,
+              padding: const EdgeInsets.only(top: 5, bottom: 5),
+              margin: const EdgeInsets.only(top: 10),
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(Radius.circular(5)),
+                color: Colors.grey[200],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 10,
+                    offset: const Offset(2, 4)
+                  )
+                ],
+                border: Border.all(
+                  width: 1,
+                  color: Colors.grey.withOpacity(0.2)
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: Text(
-                    totalDaySpendings ?? "0",
-                    style:
-                      const TextStyle(
-                        fontSize: 28
+                
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Column(
+                  //   mainAxisAlignment: MainAxisAlignment.start,
+                  //   crossAxisAlignment: CrossAxisAlignment.end,
+                  //   children: [
+                  //     const Text("Spendings:"),
+                  //     Text(DateFormat('dd.MM.yyyy').format(DateTime.now()))
+                  //   ],
+                  // ),
+                  const Text("-RON", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w400),),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Text(
+                      totalDaySpendings,
+                      style:
+                        const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w400
+                        ),
+                      ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 14, left: 5),
+                    child: Text(displayedValue,
+                      style: const TextStyle(
+                        fontSize: 16
                       ),
                     ),
-                ),
-                Container(
-                  margin: const EdgeInsets.only(top: 14, left: 5),
-                  child: Text(displayedValue,
-                    style: const TextStyle(
-                      fontSize: 16
-                    ),
                   ),
-                )
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
             SizedBox(
               height: 60,
               child: Center(
@@ -114,6 +143,10 @@ class HomePageState extends State<HomePage> {
                       margin: const EdgeInsets.symmetric(horizontal: 9),
                       decoration: BoxDecoration(
                         color: index == selectedCategoryIndex ? Colors.grey[300] : GetColorForCategory(localDb.defaultCategorys[index].bugetCategory),
+                        border: Border.all(
+                          width: 1,
+                          color: Colors.black.withOpacity(0.5)
+                        )
                       ),
                       child: Stack(
                         alignment: Alignment.center,
@@ -184,31 +217,23 @@ class HomePageState extends State<HomePage> {
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4),
                         child: ElevatedButton(onPressed: () => {DisplayValue("1")},
-                          style: ElevatedButton.styleFrom(
-                          elevation: 1,
-                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                        ), child: const Text("1", style: TextStyle(
-                          ),
-                        ),),
+                          style: keyBoardStyle,
+                          child: const Text("1"),),
                       ),
                     ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4, right: 4.0),
                         child: ElevatedButton(onPressed: () => {DisplayValue("2")},
-                        style: ElevatedButton.styleFrom(
-                          elevation: 1,
-                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                        ), child: const Text("2"),),
+                        style: keyBoardStyle,
+                        child: const Text("2"),),
                       )),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 4.0),
                         child: ElevatedButton(onPressed: () => {DisplayValue("3")},
-                        style: ElevatedButton.styleFrom(
-                          elevation: 1,
-                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                        ), child: const Text("3"),),
+                        style: keyBoardStyle,
+                        child: const Text("3"),),
                       ))
                   ],
                 ),
@@ -219,30 +244,24 @@ class HomePageState extends State<HomePage> {
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4),
                         child: ElevatedButton(onPressed: () => {DisplayValue("4")}, 
-                        style: ElevatedButton.styleFrom(
-                            elevation: 1,
-                            shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                          ), child: const Text("4"),),
+                        style: keyBoardStyle,
+                        child: const Text("4"),),
                       ),
                     ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4, right: 4.0),
                         child: ElevatedButton(onPressed: () => {DisplayValue("5")}, 
-                        style: ElevatedButton.styleFrom(
-                            elevation: 1,
-                            shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                          ), child: const Text("5"),),
+                        style: keyBoardStyle,
+                        child: const Text("5"),),
                       ),
                     ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 4.0),
                         child: ElevatedButton(onPressed: () => {DisplayValue("6")}, 
-                        style: ElevatedButton.styleFrom(
-                          elevation: 1,
-                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                        ), child: const Text("6"),),
+                        style: keyBoardStyle,
+                        child: const Text("6"),),
                       ))
                   ],
                 ),
@@ -253,28 +272,24 @@ class HomePageState extends State<HomePage> {
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4),
                         child: ElevatedButton(onPressed: () => {DisplayValue("7")},
-                        style: ElevatedButton.styleFrom(
-                            elevation: 1,
-                            shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                          ), child: const Text("7"),),
+                        style: keyBoardStyle,
+                        child: const Text("7"),),
                       ),
                     ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4, right: 4.0),
-                        child: ElevatedButton(onPressed: () => {DisplayValue("8")}, style: ElevatedButton.styleFrom(
-                            elevation: 1,
-                            shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                          ), child: const Text("8"),),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("8")},
+                        style: keyBoardStyle,
+                        child: const Text("8"),),
                       ),
                     ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 4.0),
-                        child: ElevatedButton(onPressed: () => {DisplayValue("9")}, style: ElevatedButton.styleFrom(
-                            elevation: 1,
-                            shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                          ), child: const Text("9"),),
+                        child: ElevatedButton(onPressed: () => {DisplayValue("9")},
+                        style: keyBoardStyle, 
+                        child: const Text("9"),),
                       ),
                     )
                   ],
@@ -285,49 +300,40 @@ class HomePageState extends State<HomePage> {
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4),
-                        child: ElevatedButton(onPressed: () {NewExpenseFromPopup(context);}, style: ElevatedButton.styleFrom(
-                          elevation: 1,
-                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                        ), child: const Icon(Icons.add_comment),),
+                        child: ElevatedButton(onPressed: () {NewExpenseFromPopup(context);}, 
+                        style: keyBoardStyle, 
+                        child: const Icon(Icons.add_comment),),
                       ),
                     ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4, right: 4.0),
                         child: ElevatedButton(onPressed: () => {DisplayValue("0")}, 
-                        style: ElevatedButton.styleFrom(
-                          elevation: 1,
-                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                        ), child: const Text("0")),
+                        style: keyBoardStyle, 
+                        child: const Text("0")),
                       ),
                     ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 4.0),
                         child: ElevatedButton(onPressed: () => {RemoveValue()},
-                        style: ElevatedButton.styleFrom(
-                          elevation: 1,
-                          shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))
-                        ), child: const Icon(Icons.backspace_outlined),),
+                        style: keyBoardStyle, 
+                        child: const Icon(Icons.backspace_outlined),),
                       ),
                     ),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    SizedBox(
-                      width: 125,
-                      child: ElevatedButton(onPressed: () => {AddNewExpense()}, style: ElevatedButton.styleFrom(
-                        elevation: 1,
-                        shape: const ContinuousRectangleBorder(side: BorderSide(color: Colors.grey))   
-                      ), child: const Icon(Icons.add),),
-                    ),
-                  ],
+                ElevatedButton(onPressed: () => {AddNewExpense()},
+                  style: ElevatedButton.styleFrom(
+                    elevation: 1,
+                    foregroundColor: Colors.black,
+                    backgroundColor: Colors.lightGreenAccent[100]
+                  ),
+                  child: const Icon(Icons.add),
                 ),
               ],
             ),
-            const SizedBox(height: 10)
+            const SizedBox(height: 0)
           ],
         ),
       ),
@@ -370,7 +376,7 @@ class HomePageState extends State<HomePage> {
   }
 
   AddNewExpense() {
-    if (displayedValue.isEmpty) {
+    if (displayedValue.isEmpty || double.parse(displayedValue) == 0) {
       return;
     }
     var now = DateTime.now();

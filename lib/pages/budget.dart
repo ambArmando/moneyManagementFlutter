@@ -2,14 +2,15 @@
 
 import 'package:carbon_icons/carbon_icons.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
+import 'package:money_management/components/store.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/enums/buget_categories_enum.dart';
 import 'package:money_management/models/budget.dart';
 import 'package:money_management/models/expense.dart';
+import 'package:provider/provider.dart';
 
 class BugetView extends StatefulWidget {
   const BugetView({super.key});
@@ -25,20 +26,21 @@ class BugetState extends State<BugetView> {
   final TextEditingController _investingController = TextEditingController();
   final TextEditingController _savingsController = TextEditingController();
   late Future<void> _initFuture;
-  late Budget? currentBuget;
-  ExpenseDatabase localDb = ExpenseDatabase();
-  List<Expense> selectedMonthExpenses = []; 
+  late Budget? _currentBuget;
+  late List<Budget?> _allBudgets;
+  ExpenseDatabase _localDb = ExpenseDatabase();
+  List<Expense> _selectedMonthExpenses = []; 
   List<BarChartGroupData> _barChartData = [];
   Map<BugetEnum, double> _bugetMap = {};
   bool? _changeBudgetCategoryProcents = false;
-  bool isEditProcentsEnabled = true;
-  String? errorTextBudgetAmount;
-  String? errorTextFixedCosts;
-  String? errorTextFreeSpendings;
-  String? errorTextSavings;
-  String? errorTextInvesting;
-  int procentsLeft = 0;
-  bool isProcentsInfoVisible = false;
+  bool _isEditProcentsEnabled = true;
+  String? _errorTextBudgetAmount;
+  String? _errorTextFixedCosts;
+  String? _errorTextFreeSpendings;
+  String? _errorTextSavings;
+  String? _errorTextInvesting;
+  int _procentsUsed = 0;
+  bool _isProcentsInfoVisible = false;
   var _statefullBuilderSetState;
 
   @override
@@ -50,15 +52,27 @@ class BugetState extends State<BugetView> {
   Future<void> InitBarChart() async {
     var firstDayOfCurrentMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
     var lastDayOfCurrentMonth = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
-    selectedMonthExpenses = await localDb.getExpensesBetweenDates(firstDayOfCurrentMonth, lastDayOfCurrentMonth);
-    currentBuget = await localDb.getBuget(DateTime.now().month, DateTime.now().year);
+    _selectedMonthExpenses = await _localDb.getExpensesBetweenDates(firstDayOfCurrentMonth, lastDayOfCurrentMonth);
+    _allBudgets = await _localDb.getAllBudgets();
+    _currentBuget = setBudget();
     BuildBugetMap();
     PopulateChart();
   }
 
+  Budget? setBudget() {
+    int storeDateMonth = context.read<Store>().firstDayOfSelectedMonth?.month ?? DateTime.now().month;
+    int storeDateYear = context.read<Store>().firstDayOfSelectedMonth?.year ?? DateTime.now().year;
+    for (var budget in _allBudgets) {
+      if (budget?.month == storeDateMonth && budget?.year == storeDateYear) {
+        return budget;
+      }
+    }
+    return null;
+  }
+
   void BuildBugetMap() {
     _bugetMap.clear();
-    for (var expense in selectedMonthExpenses) {
+    for (var expense in _selectedMonthExpenses) {
       var expenseBudgetCategory = expense.category.value!.bugetCategory;
       if (_bugetMap.containsKey(expenseBudgetCategory)) {
         _bugetMap[expenseBudgetCategory] = _bugetMap[expenseBudgetCategory]! + expense.spendedValue;
@@ -108,19 +122,19 @@ class BugetState extends State<BugetView> {
   }
 
   double GetBarRodMaxY(BugetEnum bugetEnum) {
-    return currentBuget == null ? 0 : (currentBuget!.value * GetPercentage(bugetEnum)) / 100;
+    return _currentBuget == null ? 0 : (_currentBuget!.value * GetPercentage(bugetEnum)) / 100;
   }
 
   int GetPercentage(BugetEnum bugetEnum) {
     switch(bugetEnum){
       case BugetEnum.fixedCosts:
-        return currentBuget!.fixedCosts!;
+        return _currentBuget!.fixedCosts!;
       case BugetEnum.freeSpendings:
-        return currentBuget!.freeSpendings!;
+        return _currentBuget!.freeSpendings!;
       case BugetEnum.savings:
-        return currentBuget!.savings!;
+        return _currentBuget!.savings!;
       case BugetEnum.investing:
-        return currentBuget!.investing!;
+        return _currentBuget!.investing!;
     }
   }
 
@@ -148,43 +162,62 @@ class BugetState extends State<BugetView> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Visibility(
-                  visible: currentBuget?.value != null,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Visibility(
+                visible: _currentBuget?.value != null,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
                   child: Text("RON", style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800]
+                    color: Colors.grey[900]
                   ),),
                 ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 100,
-                  child: Text(currentBuget?.value.toString() ?? "" ,  
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[800]
-                    ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left:8.0),
+                child: Text(_currentBuget?.value.toString() ?? "" ,  
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[900]
                   ),
                 ),
-              ],
-            ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(left: 10,),
+                child: DropdownButton<Budget>(
+                  value: _currentBuget,
+                  items: _allBudgets.map((budget) {
+                    return DropdownMenuItem(
+                      value: budget,
+                      child: Text(DateFormat('MMM yyyy').format(DateTime(budget!.year, budget.month)), style: const TextStyle(fontSize: 18),)
+                    );}).toList(),
+                  onChanged: (value) => { DisplaySelectedBudget(value) }
+                ),
+              )
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              CreateNewBudget(context);
-            },
-            child: const Text("Create a New Budget"),
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: ElevatedButton(
+              onPressed: () {
+                CreateNewBudget(context);
+              },
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.lightGreenAccent),
+                foregroundColor: MaterialStateProperty.all<Color>(Colors.grey[800]!),
+              ),
+              child: const Text("Create a New Budget", style: TextStyle(
+                fontWeight: FontWeight.w500
+              ),),
+            ),
           ),
           const SizedBox(height: 30),
           Expanded(
-            child: currentBuget == null || currentBuget!.value == 0 ? const Center(child: Text("Create a buget first!"),) : BarChart(             
+            child: _currentBuget == null || _currentBuget!.value == 0 ? const Center(child: Text("Create a buget first!"),) : BarChart(             
               BarChartData(
                 maxY: GetMaxY(),
                 minY: 0,
@@ -204,7 +237,7 @@ class BugetState extends State<BugetView> {
                     tooltipBgColor: Colors.blueGrey,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       var bugetMapKeys = _bugetMap.keys.toList();
-                      var tip = "Available buget for ${bugetMapKeys.elementAt(groupIndex).name} is ${group.barRods[0].backDrawRodData.toY} RON; ${GetPercentage(bugetMapKeys.elementAt(groupIndex))}% from the total of ${currentBuget!.value} RON";
+                      var tip = "Available buget for ${bugetMapKeys.elementAt(groupIndex).name} is ${group.barRods[0].backDrawRodData.toY} RON; ${GetPercentage(bugetMapKeys.elementAt(groupIndex))}% from the total of ${_currentBuget!.value} RON";
                       return BarTooltipItem(tip, const TextStyle(color: Colors.white));
                     },
                   )
@@ -220,10 +253,12 @@ class BugetState extends State<BugetView> {
   }  
 
   double GetMaxY() {
-    if (currentBuget == null) {
+    if (_currentBuget == null) {
       return 0;
     }
-    return currentBuget!.value / 2;
+    var procents = [_currentBuget!.fixedCosts, _currentBuget!.freeSpendings, _currentBuget!.investing, _currentBuget!.savings];
+    var highestProcent = procents.reduce((value, element) => value! > element! ? value : element);
+    return (_currentBuget!.value * highestProcent!) / 100;
   }
 
   CreateNewBudget(context) {
@@ -233,7 +268,7 @@ class BugetState extends State<BugetView> {
     _savingsController.text = "";
     _investingController.text = "";
     _changeBudgetCategoryProcents = false;
-    isEditProcentsEnabled = true;
+    _isEditProcentsEnabled = true;
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -263,9 +298,10 @@ class BugetState extends State<BugetView> {
                         child: TextField(
                           keyboardType: TextInputType.number,
                           controller: _budgetAmountController,
-                          decoration: const InputDecoration(
-                            icon: Icon(Icons.attach_money),
+                          decoration: InputDecoration(
+                            icon: const Icon(Icons.attach_money),
                             hintText: "Amount", 
+                            errorText: _errorTextBudgetAmount
                           ),
                         ),
                       ),
@@ -288,13 +324,13 @@ class BugetState extends State<BugetView> {
                                 FilteringTextInputFormatter.digitsOnly,                                
                                 LengthLimitingTextInputFormatter(3),
                               ],
-                              enabled: isEditProcentsEnabled,
+                              enabled: _isEditProcentsEnabled,
                               controller: _fixedCostsController,
                               onChanged: (value) => LimitProcentInput(value, _fixedCostsController),
                               decoration: InputDecoration(
                                 icon: const Icon(CarbonIcons.home),
                                 hintText: "Fixed costs",
-                                errorText: errorTextFixedCosts,
+                                errorText: _errorTextFixedCosts,
                               ),
                             ),
                           ),
@@ -309,11 +345,11 @@ class BugetState extends State<BugetView> {
                                 LengthLimitingTextInputFormatter(3),
                               ],
                               onChanged: (value) => LimitProcentInput(value, _savingsController),
-                              enabled: isEditProcentsEnabled,
+                              enabled: _isEditProcentsEnabled,
                               decoration: InputDecoration(
                                 icon: const Icon(CarbonIcons.piggy_bank),
                                 hintText: "Savings",
-                                errorText: errorTextSavings
+                                errorText: _errorTextSavings
                               ),
                             ),
                           ),
@@ -327,12 +363,12 @@ class BugetState extends State<BugetView> {
                                 FilteringTextInputFormatter.digitsOnly,
                                 LengthLimitingTextInputFormatter(3),
                               ],
-                              enabled: isEditProcentsEnabled,
+                              enabled: _isEditProcentsEnabled,
                               onChanged: (value) => LimitProcentInput(value, _investingController),
                               decoration: InputDecoration(
                                 icon: const Icon(CarbonIcons.chart_line_smooth),
                                 hintText: "Investing",
-                                errorText: errorTextInvesting
+                                errorText: _errorTextInvesting
                               ),
                             ),
                           ),
@@ -346,20 +382,20 @@ class BugetState extends State<BugetView> {
                                 FilteringTextInputFormatter.digitsOnly,
                                 LengthLimitingTextInputFormatter(3),
                               ],
-                              enabled: isEditProcentsEnabled,
+                              enabled: _isEditProcentsEnabled,
                               onChanged: (value) => LimitProcentInput(value, _freeSpendingsController),
                               decoration: InputDecoration(
                                 icon: const Icon(CarbonIcons.brush_freehand),
                                 hintText: "Free spendings",
-                                errorText: errorTextFreeSpendings
+                                errorText: _errorTextFreeSpendings
                               ),
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.only(top: 20.0),
                             child: Visibility(
-                              visible: isProcentsInfoVisible,
-                              child: Text("*Procents sum is ${procentsLeft} it must equal 100", style: TextStyle(
+                              visible: _isProcentsInfoVisible,
+                              child: Text("Procents used:$_procentsUsed%. Procents sum must be equal to 100.", style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.red[400]
                               ),),
@@ -378,14 +414,14 @@ class BugetState extends State<BugetView> {
                                       _savingsController.text = "";
                                       _investingController.text = "";
                                       _freeSpendingsController.text = "";
-                                      isEditProcentsEnabled = true;
+                                      _isEditProcentsEnabled = true;
                                     }
                                     else if (value = true) {
                                       _fixedCostsController.text = "50";
                                       _savingsController.text = "5";
                                       _investingController.text = "10";
                                       _freeSpendingsController.text = "35";
-                                      isEditProcentsEnabled = false;
+                                      _isEditProcentsEnabled = false;
                                     }
                                   });
                                 }
@@ -413,36 +449,38 @@ class BugetState extends State<BugetView> {
     return MaterialButton(
       onPressed: () {
         if (_budgetAmountController.text.isEmpty) {
-          //adauga errorText pe Amount
+          _statefullBuilderSetState((){
+            _errorTextBudgetAmount = "This field is mandatory";
+          });
           return;
         }
 
-        currentBuget ??= Budget(
+        _currentBuget ??= Budget(
           value: double.tryParse(_budgetAmountController.text)!,
           month: DateTime.now().month,
           year: DateTime.now().year
         );
 
         if (_changeBudgetCategoryProcents!) {
-          currentBuget!.value = double.tryParse(_budgetAmountController.text)!;
-          currentBuget!.fixedCosts = 50;
-          currentBuget!.freeSpendings = 35;
-          currentBuget!.savings = 10;
-          currentBuget!.investing = 5;
+          _currentBuget!.value = double.tryParse(_budgetAmountController.text)!;
+          _currentBuget!.fixedCosts = 50;
+          _currentBuget!.freeSpendings = 35;
+          _currentBuget!.savings = 10;
+          _currentBuget!.investing = 5;
         }
 
         if (!_changeBudgetCategoryProcents!) {
           if (!AreProcentsValid()) return;
           if (!IsProcentsSumValid()) return;
 
-          currentBuget!.value = double.tryParse(_budgetAmountController.text)!;
-          currentBuget!.fixedCosts = int.tryParse(_fixedCostsController.text);
-          currentBuget!.freeSpendings = int.tryParse(_freeSpendingsController.text);
-          currentBuget!.savings = int.tryParse(_savingsController.text);
-          currentBuget!.investing = int.tryParse(_investingController.text);
+          _currentBuget!.value = double.tryParse(_budgetAmountController.text)!;
+          _currentBuget!.fixedCosts = int.tryParse(_fixedCostsController.text);
+          _currentBuget!.freeSpendings = int.tryParse(_freeSpendingsController.text);
+          _currentBuget!.savings = int.tryParse(_savingsController.text);
+          _currentBuget!.investing = int.tryParse(_investingController.text);
         }
 
-        localDb.updateBuget(currentBuget!);
+        _localDb.updateBuget(_currentBuget!);
         setState(() {
           PopulateChart();        
           Navigator.of(context).pop();
@@ -478,12 +516,12 @@ class BugetState extends State<BugetView> {
   bool AreProcentsValid() {
     var mandatoryField = "This field is mandatory";
     _statefullBuilderSetState(() {
-      errorTextFixedCosts = _fixedCostsController.text.isEmpty ? mandatoryField : null;
-      errorTextFreeSpendings = _freeSpendingsController.text.isEmpty ? mandatoryField : null;
-      errorTextSavings = _savingsController.text.isEmpty ? mandatoryField : null;
-      errorTextInvesting = _investingController.text.isEmpty ? mandatoryField : null;
+      _errorTextFixedCosts = _fixedCostsController.text.isEmpty ? mandatoryField : null;
+      _errorTextFreeSpendings = _freeSpendingsController.text.isEmpty ? mandatoryField : null;
+      _errorTextSavings = _savingsController.text.isEmpty ? mandatoryField : null;
+      _errorTextInvesting = _investingController.text.isEmpty ? mandatoryField : null;
     });
-    return errorTextFixedCosts == null && errorTextFreeSpendings == null && errorTextSavings == null && errorTextInvesting == null; 
+    return _errorTextFixedCosts == null && _errorTextFreeSpendings == null && _errorTextSavings == null && _errorTextInvesting == null; 
   }
 
   bool IsProcentsSumValid() {
@@ -495,12 +533,12 @@ class BugetState extends State<BugetView> {
     
     if (sum != 100) {
       _statefullBuilderSetState(() {
-        procentsLeft = sum;
-        isProcentsInfoVisible = true;
+        _procentsUsed = sum;
+        _isProcentsInfoVisible = true;
       });
       return false;
     }
-    isProcentsInfoVisible = false;
+    _isProcentsInfoVisible = false;
     return true;
   }
 
@@ -565,6 +603,21 @@ class BugetState extends State<BugetView> {
         break;
     }
     return SideTitleWidget(axisSide: meta.axisSide, child: child);
+  }
+
+  void DisplaySelectedBudget(Budget? selectedBudget) async {
+    if (selectedBudget == null) return;
+    var firstDayOfSelectedMonth = DateTime(selectedBudget.year, selectedBudget.month, 1);
+    var lastDayOfSelectedMonth = DateTime(selectedBudget.year, selectedBudget.month + 1, 1).subtract(const Duration(days: 1));
+    context.read<Store>().firstDayOfSelectedMonth = firstDayOfSelectedMonth;
+    context.read<Store>().lastDayOfSelectedMonth = lastDayOfSelectedMonth;
+    var query = await _localDb.getExpensesBetweenDates(firstDayOfSelectedMonth, lastDayOfSelectedMonth);
+    setState(() {
+      _currentBuget = selectedBudget;
+      _selectedMonthExpenses = query;
+      BuildBugetMap();
+      PopulateChart();
+    });
   }
 
   String GetRemainingBuget(BugetEnum bugetEnum) {
