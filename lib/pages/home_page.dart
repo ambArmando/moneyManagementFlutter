@@ -1,6 +1,7 @@
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:money_management/components/my_list_tile.dart';
 import 'package:money_management/components/my_popup.dart';
 import 'package:money_management/database/expense_database.dart';
@@ -21,7 +22,7 @@ class HomePageState extends State<HomePage> {
   String displayedValue = "";
   bool isLoading = true;
   late String totalDaySpendings;
-  late Budget? setBudget;
+  late Budget? currentMonthBudget;
   ExpenseDatabase localDb = ExpenseDatabase();
   List<Expense> currentDayExpenses = [];
   List<Expense> currentMonthExpenses = [];
@@ -41,7 +42,7 @@ class HomePageState extends State<HomePage> {
   void LoadExpenses() async {
     var startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
     var endDate = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
-    setBudget = await localDb.getBuget(DateTime.now().month, DateTime.now().year);
+    currentMonthBudget = await localDb.getBuget(DateTime.now().month, DateTime.now().year);
     queryDefaultCategories = await localDb.getCategories();
     currentMonthExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
     currentDayExpenses = currentMonthExpenses.where((element) => element.date.day == DateTime.now().day && element.date.month == DateTime.now().month && element.date.year == DateTime.now().year).toList();
@@ -65,9 +66,9 @@ class HomePageState extends State<HomePage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       floatingActionButton: Visibility(
-        visible: false,
+        visible: true,
         child: TextButton(
-          onPressed: () => {localDb.deleteBudget()},
+          onPressed: () => {localDb.deleteAllData()},
           child: const Text("Delete data")
         ),
       ),
@@ -99,26 +100,27 @@ class HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Column(
-                  //   mainAxisAlignment: MainAxisAlignment.start,
-                  //   crossAxisAlignment: CrossAxisAlignment.end,
-                  //   children: [
-                  //     const Text("Spendings:"),
-                  //     Text(DateFormat('dd.MM.yyyy').format(DateTime.now()))
-                  //   ],
-                  // ),
-                  const Text("-RON", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w400),),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: Text(
-                      totalDaySpendings,
-                      style:
-                        const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w400
-                        ),
-                      ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const Text("Spendings:"),
+                      Text(DateFormat('dd.MM.yyyy').format(DateTime.now()))
+                    ],
                   ),
+                  const SizedBox(width: 10),
+                  Text(totalDaySpendings, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400),),
+                  // Padding(
+                  //   padding: const EdgeInsets.only(left: 10),
+                  //   child: Text(
+                  //     totalDaySpendings,
+                  //     style:
+                  //       const TextStyle(
+                  //         fontSize: 28,
+                  //         fontWeight: FontWeight.w400
+                  //       ),
+                  //     ),
+                  // ),
                   Container(
                     margin: const EdgeInsets.only(top: 14, left: 5),
                     child: Text(displayedValue,
@@ -155,7 +157,7 @@ class HomePageState extends State<HomePage> {
                             top: 0,
                             right: 2,
                             child: Visibility(
-                              visible: (setBudget?.value ?? 0) > 0 && (IsBudgetAboveLimit(localDb.defaultCategorys[index])),
+                              visible: (currentMonthBudget?.value ?? 0) > 0 && (IsBudgetAboveLimit(localDb.defaultCategorys[index])),
                               child: Icon(Icons.warning_amber_rounded, color: Colors.red[600], size: 22,))
                           ),
                           Positioned(
@@ -344,9 +346,6 @@ class HomePageState extends State<HomePage> {
     if (_expenseCategoryTotalsMap.containsKey(category.bugetCategory)) { 
       return _expenseCategoryTotalsMap[category.bugetCategory]! > CalculateMaxBudget(category.bugetCategory);
     }
-    // if (store.isBudgetCategoryValueAboveLimitMap.containsKey(category.bugetCategory) && _expenseCategoryTotalsMap.containsKey(category.bugetCategory)) {
-    //   return store.isBudgetCategoryValueAboveLimitMap[category.bugetCategory] ?? false;
-    // }
     return false;
   }
 
@@ -361,16 +360,20 @@ class HomePageState extends State<HomePage> {
     ).then((value) {
       if (popup.getExpense != null && popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) {
         currentDayExpenses.add(popup.getExpense!);
-        _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory] = _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory]! + popup.getExpense!.spendedValue;
-        displayedValue = "";
-        spendedValueController.clear();
-        noteController.clear();
-        setState(() {
-          totalDaySpendings = CalculateCurrentDaySpendingsTotal();
-        });
+        
       }
       if (popup.getExpense != null) {
         currentMonthExpenses.add(popup.getExpense!);
+        if (_expenseCategoryTotalsMap.containsKey(popup.getExpense!.category.value!.bugetCategory)) {
+          _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory] = _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory]! + popup.getExpense!.spendedValue;
+        }
+        else
+        {
+          _expenseCategoryTotalsMap[popup.getExpense!.category.value!.bugetCategory] = popup.getExpense!.spendedValue;
+        }
+        setState(() {
+          totalDaySpendings = CalculateCurrentDaySpendingsTotal();
+        });
       }
     });
   }
@@ -413,7 +416,7 @@ class HomePageState extends State<HomePage> {
     var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: currentDayExpenses[index],);
     showDialog (context: context, builder: (context) => popup)
     .then((value) {
-      if (popup.getExpense!.date.day != DateTime.now().day && popup.getExpense!.date.month != DateTime.now().month && popup.getExpense!.date.year != DateTime.now().year) {
+      if (popup.getExpense!.date.day != DateTime.now().day || popup.getExpense!.date.month != DateTime.now().month || popup.getExpense!.date.year != DateTime.now().year) {
         currentMonthExpenses.remove(currentDayExpenses[index]);
         currentDayExpenses.removeAt(index);
       }  
@@ -461,19 +464,19 @@ class HomePageState extends State<HomePage> {
   }
 
   double CalculateMaxBudget(BugetEnum bugetEnum) {
-    return setBudget == null ? 0 : (setBudget!.value * GetPercentage(bugetEnum)) / 100;
+    return currentMonthBudget == null ? 0 : (currentMonthBudget!.value * GetPercentage(bugetEnum)) / 100;
   }
 
   int GetPercentage(BugetEnum bugetEnum) {
     switch(bugetEnum){
       case BugetEnum.fixedCosts:
-        return setBudget!.fixedCosts!;
+        return currentMonthBudget!.fixedCosts!;
       case BugetEnum.freeSpendings:
-        return setBudget!.freeSpendings!;
+        return currentMonthBudget!.freeSpendings!;
       case BugetEnum.savings:
-        return setBudget!.savings!;
+        return currentMonthBudget!.savings!;
       case BugetEnum.investing:
-        return setBudget!.investing!;
+        return currentMonthBudget!.investing!;
     }
   }
 

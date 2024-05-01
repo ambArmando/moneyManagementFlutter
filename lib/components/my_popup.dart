@@ -167,8 +167,8 @@ class MyPopupState extends State<MyPopup>{
             note: _noteController.text,
           );
           widget.expense = newExpense;
-          Navigator.pop(context);
           _localDb.createNewExpense(newExpense);
+          Navigator.pop(context);
         } else if (widget.expense != null && _spendedValueController.text.isNotEmpty && selectedCategory != null) {
           widget.expense!.spendedValue = double.parse(_spendedValueController.text);
           widget.expense!.category.value = selectedCategory!;

@@ -1,5 +1,7 @@
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
 
+import 'dart:ffi';
+
 import 'package:carbon_icons/carbon_icons.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -50,9 +52,9 @@ class BugetState extends State<BugetView> {
   }
 
   Future<void> InitBarChart() async {
-    var firstDayOfCurrentMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
-    var lastDayOfCurrentMonth = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
-    _selectedMonthExpenses = await _localDb.getExpensesBetweenDates(firstDayOfCurrentMonth, lastDayOfCurrentMonth);
+    int storeDateMonth = context.read<Store>().firstDayOfSelectedMonth?.month ?? DateTime.now().month;
+    int storeDateYear = context.read<Store>().firstDayOfSelectedMonth?.year ?? DateTime.now().year;
+    _selectedMonthExpenses = await _localDb.getExpensesBetweenDates(DateTime(storeDateYear, storeDateMonth, 1), DateTime(storeDateYear, storeDateMonth + 1, 1).subtract(const Duration(days: 1)));
     _allBudgets = await _localDb.getAllBudgets();
     _currentBuget = setBudget();
     BuildBugetMap();
@@ -269,6 +271,12 @@ class BugetState extends State<BugetView> {
     _investingController.text = "";
     _changeBudgetCategoryProcents = false;
     _isEditProcentsEnabled = true;
+    _errorTextBudgetAmount = null;
+    _errorTextFixedCosts = null;
+    _errorTextFreeSpendings = null;
+    _errorTextInvesting = null;
+    _errorTextSavings = null;
+    _isProcentsInfoVisible = false;
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -299,7 +307,7 @@ class BugetState extends State<BugetView> {
                           keyboardType: TextInputType.number,
                           controller: _budgetAmountController,
                           decoration: InputDecoration(
-                            icon: const Icon(Icons.attach_money),
+                            icon: const Icon(Icons.account_balance_wallet_outlined),
                             hintText: "Amount", 
                             errorText: _errorTextBudgetAmount
                           ),
@@ -385,7 +393,7 @@ class BugetState extends State<BugetView> {
                               enabled: _isEditProcentsEnabled,
                               onChanged: (value) => LimitProcentInput(value, _freeSpendingsController),
                               decoration: InputDecoration(
-                                icon: const Icon(CarbonIcons.brush_freehand),
+                                icon: const Icon(CarbonIcons.user_favorite_alt_filled),
                                 hintText: "Free spendings",
                                 errorText: _errorTextFreeSpendings
                               ),
@@ -448,7 +456,7 @@ class BugetState extends State<BugetView> {
   Widget _saveBudget() {
     return MaterialButton(
       onPressed: () {
-        if (_budgetAmountController.text.isEmpty) {
+        if (_budgetAmountController.text.isEmpty || double.parse(_budgetAmountController.text) < 1) {
           _statefullBuilderSetState((){
             _errorTextBudgetAmount = "This field is mandatory";
           });

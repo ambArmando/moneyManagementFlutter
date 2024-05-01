@@ -10,7 +10,7 @@ class Home extends StatefulWidget {
 
 class HomeState extends State<Home> {
   int _currentBottomBarNavigationIndex = 0;
-  final List<Widget> _navigationPages = [
+  final List<Widget> _navigationPages = const [
     HomePage(),
     Statistics(),
     BugetView(),

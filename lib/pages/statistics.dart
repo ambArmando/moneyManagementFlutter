@@ -150,7 +150,8 @@ class StatisticsState extends State<Statistics> {
                             left: 5,
                             child: SizedBox(
                               width: MediaQuery.of(context).size.width,
-                              child: _pieLegend()),
+                              child: _pieLegend()
+                            ),
                           ),
                         ],
                       ),
