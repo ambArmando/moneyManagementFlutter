@@ -12,6 +12,7 @@ import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/enums/buget_categories_enum.dart';
 import 'package:money_management/models/budget.dart';
 import 'package:money_management/models/expense.dart';
+import 'package:money_management/utils/time.dart';
 import 'package:provider/provider.dart';
 
 class BugetView extends StatefulWidget {
@@ -52,8 +53,8 @@ class BugetState extends State<BugetView> {
   }
 
   Future<void> InitBarChart() async {
-    int storeDateMonth = context.read<Store>().firstDayOfSelectedMonth?.month ?? DateTime.now().month;
-    int storeDateYear = context.read<Store>().firstDayOfSelectedMonth?.year ?? DateTime.now().year;
+    int storeDateMonth = context.read<Store>().firstDayOfSelectedMonth?.month ?? getToday().month;
+    int storeDateYear = context.read<Store>().firstDayOfSelectedMonth?.year ?? getToday().year;
     _selectedMonthExpenses = await _localDb.getExpensesBetweenDates(DateTime(storeDateYear, storeDateMonth, 1), DateTime(storeDateYear, storeDateMonth + 1, 1).subtract(const Duration(days: 1)));
     _allBudgets = await _localDb.getAllBudgets();
     _currentBuget = setBudget();
@@ -62,8 +63,8 @@ class BugetState extends State<BugetView> {
   }
 
   Budget? setBudget() {
-    int storeDateMonth = context.read<Store>().firstDayOfSelectedMonth?.month ?? DateTime.now().month;
-    int storeDateYear = context.read<Store>().firstDayOfSelectedMonth?.year ?? DateTime.now().year;
+    int storeDateMonth = context.read<Store>().firstDayOfSelectedMonth?.month ?? getToday().month;
+    int storeDateYear = context.read<Store>().firstDayOfSelectedMonth?.year ?? getToday().year;
     for (var budget in _allBudgets) {
       if (budget?.month == storeDateMonth && budget?.year == storeDateYear) {
         return budget;
@@ -180,7 +181,7 @@ class BugetState extends State<BugetView> {
               ),
               Padding(
                 padding: const EdgeInsets.only(left:8.0),
-                child: Text(_currentBuget?.value.toString() ?? "" ,  
+                child: Text(_currentBuget?.value.toStringAsFixed(0) ?? "" ,  
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w500,
@@ -239,7 +240,7 @@ class BugetState extends State<BugetView> {
                     tooltipBgColor: Colors.blueGrey,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       var bugetMapKeys = _bugetMap.keys.toList();
-                      var tip = "Available buget for ${bugetMapKeys.elementAt(groupIndex).name} is ${group.barRods[0].backDrawRodData.toY} RON; ${GetPercentage(bugetMapKeys.elementAt(groupIndex))}% from the total of ${_currentBuget!.value} RON";
+                      var tip = "Available buget for ${bugetMapKeys.elementAt(groupIndex).name} is ${group.barRods[0].backDrawRodData.toY.toStringAsFixed(0)} RON; ${GetPercentage(bugetMapKeys.elementAt(groupIndex))}% from the total of ${_currentBuget!.value.toStringAsFixed(0)} RON";
                       return BarTooltipItem(tip, const TextStyle(color: Colors.white));
                     },
                   )
@@ -426,8 +427,8 @@ class BugetState extends State<BugetView> {
                                     }
                                     else if (value = true) {
                                       _fixedCostsController.text = "50";
-                                      _savingsController.text = "5";
-                                      _investingController.text = "10";
+                                      _savingsController.text = "10";
+                                      _investingController.text = "5";
                                       _freeSpendingsController.text = "35";
                                       _isEditProcentsEnabled = false;
                                     }
@@ -455,7 +456,7 @@ class BugetState extends State<BugetView> {
 
   Widget _saveBudget() {
     return MaterialButton(
-      onPressed: () {
+      onPressed: () async {
         if (_budgetAmountController.text.isEmpty || double.parse(_budgetAmountController.text) < 1) {
           _statefullBuilderSetState((){
             _errorTextBudgetAmount = "This field is mandatory";
@@ -463,11 +464,17 @@ class BugetState extends State<BugetView> {
           return;
         }
 
+        if (_currentBuget?.month != getToday().month || _currentBuget?.year != getToday().year) {
+            _currentBuget = await _localDb.getBuget(getToday().month, getToday().year);
+        }
+
         _currentBuget ??= Budget(
           value: double.tryParse(_budgetAmountController.text)!,
-          month: DateTime.now().month,
-          year: DateTime.now().year
+          month: getToday().month,
+          year: getToday().year
         );
+
+        _selectedMonthExpenses = await _localDb.getExpensesBetweenDates(DateTime(getToday().year, getToday().month, 1), DateTime(getToday().year, getToday().month + 1, 1).subtract(const Duration(days: 1)));
 
         if (_changeBudgetCategoryProcents!) {
           _currentBuget!.value = double.tryParse(_budgetAmountController.text)!;
@@ -489,7 +496,14 @@ class BugetState extends State<BugetView> {
         }
 
         _localDb.updateBuget(_currentBuget!);
+        var index = _allBudgets.indexOf(_currentBuget);
+        if (index == -1) {
+          _allBudgets.add(_currentBuget);
+        } else {
+          _allBudgets[index] = _currentBuget;
+        }
         setState(() {
+          BuildBugetMap();
           PopulateChart();        
           Navigator.of(context).pop();
         });
@@ -567,7 +581,7 @@ class BugetState extends State<BugetView> {
               fontWeight: FontWeight.bold,
               fontSize: 11.5,
             ),),
-            Text("of ${GetBarRodMaxY(BugetEnum.fixedCosts).toString()} RON", style: style)
+            Text("of ${GetBarRodMaxY(BugetEnum.fixedCosts).toStringAsFixed(0)} RON", style: style)
           ],);
         break;
       case 1:
@@ -579,7 +593,7 @@ class BugetState extends State<BugetView> {
               fontWeight: FontWeight.bold,
               fontSize: 11.5,
             ),),
-            Text("of ${GetBarRodMaxY(BugetEnum.savings).toString()} RON", style: style)
+            Text("of ${GetBarRodMaxY(BugetEnum.savings).toStringAsFixed(0)} RON", style: style)
           ],);
         break;
       case 2:
@@ -591,7 +605,7 @@ class BugetState extends State<BugetView> {
               fontWeight: FontWeight.bold,
               fontSize: 11.5,
             ),),
-            Text("of ${GetBarRodMaxY(BugetEnum.investing).toString()} RON", style: style)
+            Text("of ${GetBarRodMaxY(BugetEnum.investing).toStringAsFixed(0)} RON", style: style)
           ],);
         break;
       case 3:
@@ -603,7 +617,7 @@ class BugetState extends State<BugetView> {
               fontWeight: FontWeight.bold,
               fontSize: 11.5,
             ),),
-            Text("of ${GetBarRodMaxY(BugetEnum.freeSpendings).toString()} RON", style: style)
+            Text("of ${GetBarRodMaxY(BugetEnum.freeSpendings).toStringAsFixed(0)} RON", style: style)
           ],);
           break;
       default: 
@@ -631,7 +645,7 @@ class BugetState extends State<BugetView> {
   String GetRemainingBuget(BugetEnum bugetEnum) {
     var remainingValue = GetBarRodMaxY(bugetEnum) - _bugetMap[bugetEnum]!;
 
-    return remainingValue.toString();
+    return remainingValue.toStringAsFixed(0);
   }
 
 }

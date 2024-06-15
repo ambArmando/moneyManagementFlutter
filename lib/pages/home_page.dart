@@ -9,6 +9,7 @@ import 'package:money_management/enums/buget_categories_enum.dart';
 import 'package:money_management/models/budget.dart';
 import 'package:money_management/models/category.dart';
 import 'package:money_management/models/expense.dart';
+import 'package:money_management/utils/time.dart';
 
 class HomePage extends StatefulWidget{
   const HomePage({super.key});
@@ -40,12 +41,12 @@ class HomePageState extends State<HomePage> {
   }
 
   void LoadExpenses() async {
-    var startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
-    var endDate = DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
-    currentMonthBudget = await localDb.getBuget(DateTime.now().month, DateTime.now().year);
+    var startDate = DateTime(getToday().year, getToday().month, 1);
+    var endDate = DateTime(getToday().year, getToday().month + 1, 1).subtract(const Duration(days: 1));
+    currentMonthBudget = await localDb.getBuget(getToday().month, getToday().year);
     queryDefaultCategories = await localDb.getCategories();
     currentMonthExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
-    currentDayExpenses = currentMonthExpenses.where((element) => element.date.day == DateTime.now().day && element.date.month == DateTime.now().month && element.date.year == DateTime.now().year).toList();
+    currentDayExpenses = currentMonthExpenses.where((element) => element.date.day == getToday().day && element.date.month == getToday().month && element.date.year == getToday().year).toList();
     CalculateCategoryTotals();
     totalDaySpendings = CalculateCurrentDaySpendingsTotal();
     setState((){
@@ -66,9 +67,9 @@ class HomePageState extends State<HomePage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       floatingActionButton: Visibility(
-        visible: true,
+        visible: false,
         child: TextButton(
-          onPressed: () => {localDb.deleteAllData()},
+          onPressed: () => {localDb.deleteBudgetMonth(6, 2024)},
           child: const Text("Delete data")
         ),
       ),
@@ -105,7 +106,7 @@ class HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       const Text("Spendings:"),
-                      Text(DateFormat('dd.MM.yyyy').format(DateTime.now()))
+                      Text(DateFormat('dd.MM.yyyy').format(getToday()))
                     ],
                   ),
                   const SizedBox(width: 10),
@@ -302,7 +303,7 @@ class HomePageState extends State<HomePage> {
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4),
-                        child: ElevatedButton(onPressed: () {NewExpenseFromPopup(context);}, 
+                        child: ElevatedButton(onPressed: () {AddNewExpenseFromPopup(context);}, 
                         style: keyBoardStyle, 
                         child: const Icon(Icons.add_comment),),
                       ),
@@ -349,7 +350,7 @@ class HomePageState extends State<HomePage> {
     return false;
   }
 
-  void NewExpenseFromPopup(BuildContext context) {
+  void AddNewExpenseFromPopup(BuildContext context) {
     var popup = MyPopup(
       title: "New expense",
       localDb: localDb,
@@ -358,9 +359,8 @@ class HomePageState extends State<HomePage> {
       context: context,
       builder: (context) => popup
     ).then((value) {
-      if (popup.getExpense != null && popup.getExpense!.date.day == DateTime.now().day && popup.getExpense!.date.month == DateTime.now().month && popup.getExpense!.date.year == DateTime.now().year) {
+      if (popup.getExpense != null && popup.getExpense!.date.day == getToday().day && popup.getExpense!.date.month == getToday().month && popup.getExpense!.date.year == getToday().year) {
         currentDayExpenses.add(popup.getExpense!);
-        
       }
       if (popup.getExpense != null) {
         currentMonthExpenses.add(popup.getExpense!);
@@ -382,7 +382,7 @@ class HomePageState extends State<HomePage> {
     if (displayedValue.isEmpty || double.parse(displayedValue) == 0) {
       return;
     }
-    var now = DateTime.now();
+    var now = getToday();
     selectedCategoryIndex ??= 0;
     Expense expense = Expense(
       spendedValue: double.parse(displayedValue),
@@ -416,7 +416,7 @@ class HomePageState extends State<HomePage> {
     var popup = MyPopup(title: "Edit expense", localDb: localDb, expense: currentDayExpenses[index],);
     showDialog (context: context, builder: (context) => popup)
     .then((value) {
-      if (popup.getExpense!.date.day != DateTime.now().day || popup.getExpense!.date.month != DateTime.now().month || popup.getExpense!.date.year != DateTime.now().year) {
+      if (popup.getExpense!.date.day != getToday().day || popup.getExpense!.date.month != getToday().month || popup.getExpense!.date.year != getToday().year) {
         currentMonthExpenses.remove(currentDayExpenses[index]);
         currentDayExpenses.removeAt(index);
       }  
@@ -460,7 +460,7 @@ class HomePageState extends State<HomePage> {
   }
 
   String CalculateCurrentDaySpendingsTotal() {
-    return currentDayExpenses.isNotEmpty ? currentDayExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString() : "0";
+    return currentDayExpenses.isNotEmpty ? currentDayExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toStringAsFixed(0) : "0";
   }
 
   double CalculateMaxBudget(BugetEnum bugetEnum) {

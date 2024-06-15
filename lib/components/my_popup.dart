@@ -1,9 +1,11 @@
 // ignore_for_file: non_constant_identifier_names
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/models/category.dart';
+import 'package:money_management/utils/time.dart';
 import '../models/expense.dart';
 
 class MyPopup extends StatefulWidget {
@@ -29,7 +31,7 @@ class MyPopupState extends State<MyPopup>{
   final TextEditingController _spendedValueController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
   late ExpenseDatabase _localDb;
-  DateTime? selectedDate = DateTime.now();
+  DateTime? selectedDate = getToday();
   Category? selectedCategory;
   List<Category> _defaultCategories = [];
   String? errorTextValue;
@@ -41,7 +43,7 @@ class MyPopupState extends State<MyPopup>{
     _localDb = widget.localDb;
     LoadDefaultCategories();
     if (widget.expense != null) {
-      _spendedValueController.text = widget.expense!.spendedValue.toString();
+      _spendedValueController.text = widget.expense!.spendedValue.toStringAsFixed(0);
       _noteController.text = widget.expense!.note.toString();
       selectedCategory = widget.expense!.category.value;
       selectedDate = widget.expense!.date;
@@ -59,9 +61,12 @@ class MyPopupState extends State<MyPopup>{
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextField(
-                    maxLength: 5,
                     keyboardType: TextInputType.number,
                     controller: _spendedValueController,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                      LengthLimitingTextInputFormatter(5),
+                    ],
                     decoration: InputDecoration(
                       hintText: "Value",
                       errorText: errorTextValue,
@@ -105,7 +110,7 @@ class MyPopupState extends State<MyPopup>{
                         ElevatedButton(onPressed: () async {
                           final DateTime? pickedDate = await showDatePicker(
                           context: context,
-                          initialDate: DateTime.now(),
+                          initialDate: getToday(),
                           firstDate: DateTime(2000),
                           lastDate: DateTime(2101),
                           );
@@ -118,7 +123,7 @@ class MyPopupState extends State<MyPopup>{
                         Expanded(
                           child: Container(
                             margin: const EdgeInsets.only(left: 15),
-                            child: Text(selectedDate == null ? DateFormat('dd MMM yyyy').format(DateTime.now()) : DateFormat('dd MMM yyyy').format(selectedDate!))),
+                            child: Text(selectedDate == null ? DateFormat('dd MMM yyyy').format(getToday()) : DateFormat('dd MMM yyyy').format(selectedDate!))),
                         ),
                       ],
                     ),
@@ -141,7 +146,7 @@ class MyPopupState extends State<MyPopup>{
         _spendedValueController.clear();
         _noteController.clear();
         selectedCategory = null;
-        selectedDate = DateTime.now();
+        selectedDate = getToday();
       },
       child: const Text("Cancel"),
     );
@@ -150,8 +155,8 @@ class MyPopupState extends State<MyPopup>{
   Widget _saveButton() {
     return MaterialButton(
       onPressed: () async {
-        
-        if (_spendedValueController.text.isEmpty) {
+        var inputValue = double.tryParse(_spendedValueController.text);
+        if (_spendedValueController.text.isEmpty || inputValue == null || inputValue == 0) {
           setState(() {
             errorTextValue = "Add a value!"; 
           });

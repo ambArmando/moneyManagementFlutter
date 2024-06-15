@@ -49,7 +49,7 @@ class MyListTile extends StatelessWidget {
                     Expanded(child: Text(DateFormat('dd.MM').format(expense.date), style: const TextStyle(
                       fontSize: 12,
                     ),)),
-                    Text("-${expense.spendedValue}", style: const TextStyle(
+                    Text("-${expense.spendedValue.toStringAsFixed(0)}", style: const TextStyle(
                       color: Colors.red,
                       fontSize: 14,
                       fontWeight: FontWeight.w500

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:money_management/enums/buget_categories_enum.dart';
 import 'package:money_management/models/budget.dart';
+import 'package:money_management/utils/time.dart';
 import 'package:path_provider/path_provider.dart';
 import '../enums/category_enum.dart';
 import '../models/expense.dart';
@@ -62,7 +63,7 @@ class ExpenseDatabase extends ChangeNotifier {
     for (int i = 0; i < allList.length; i++) {
       await allList[i].category.load();
     } 
-    return allList.where((_) => _.date.day == DateTime.now().day && _.date.month == DateTime.now().month && _.date.year == DateTime.now().year).toList();
+    return allList.where((_) => _.date.day == getToday().day && _.date.month == getToday().month && _.date.year == getToday().year).toList(); 
   }
 
   void deleteExpense(int id) async {
@@ -125,6 +126,17 @@ class ExpenseDatabase extends ChangeNotifier {
       .filter()
       .idLessThan(4000)
       .deleteAll();
+      print('Deleted $count budgets');
+    });
+  }
+
+  void deleteBudgetMonth(int month, int year) async{
+    await isar.writeTxn(() async {
+      var count = await isar.budgets
+      .filter()
+      .monthEqualTo(month)
+      .yearEqualTo(year)
+      .deleteFirst();
       print('Deleted $count budgets');
     });
   }

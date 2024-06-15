@@ -11,6 +11,7 @@ import 'package:money_management/components/store.dart';
 import 'package:money_management/database/expense_database.dart';
 import 'package:money_management/enums/category_enum.dart';
 import 'package:money_management/models/expense.dart';
+import 'package:money_management/utils/time.dart';
 import 'package:provider/provider.dart';
 
 class Statistics extends StatefulWidget {
@@ -39,8 +40,8 @@ class StatisticsState extends State<Statistics> {
   }
 
   Future<void> InitChart() async {
-    startDate = context.read<Store>().firstDayOfSelectedMonth ?? DateTime(DateTime.now().year, DateTime.now().month, 1);
-    endDate = context.read<Store>().lastDayOfSelectedMonth ?? DateTime(DateTime.now().year, DateTime.now().month + 1, 1).subtract(const Duration(days: 1));
+    startDate = context.read<Store>().firstDayOfSelectedMonth ?? DateTime(getToday().year, getToday().month, 1);
+    endDate = context.read<Store>().lastDayOfSelectedMonth ?? DateTime(getToday().year, getToday().month + 1, 1).subtract(const Duration(days: 1));
     _currentDatesExpenses = await localDb.getExpensesBetweenDates(startDate, endDate);
     _currentDatesExpensesCopy = List.from(_currentDatesExpenses);
     totalSpendingsBetweenDates = CurrentDaySpendings();
@@ -256,7 +257,7 @@ class StatisticsState extends State<Statistics> {
       _pieData.add(PieChartSectionData(
         value: value,
         showTitle: true,
-        title: value.toString(),
+        title: value.toStringAsFixed(0),
         radius: expensesMapKeys.indexOf(key) == touchedIndex ? 70 : 60,
         titleStyle: TextStyle(
           fontSize: expensesMapKeys.indexOf(key) == touchedIndex ? 25 : 15,
@@ -364,7 +365,7 @@ class StatisticsState extends State<Statistics> {
 
   String CurrentDaySpendings() {
     if (_currentDatesExpenses.isNotEmpty) {
-      return totalSpendingsBetweenDates = _currentDatesExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toString();
+      return totalSpendingsBetweenDates = _currentDatesExpenses.map((_) => _.spendedValue).reduce((value, element) => value + element).toStringAsFixed(0);
     }
     return '0';
   }
